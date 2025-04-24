@@ -2,7 +2,7 @@ import time
 
 import requests
 
-from lookup import *
+# from lookup import *
 import gpxpy
 import gpxpy.gpx
 from matplotlib import pyplot as plt
@@ -12,6 +12,7 @@ from math import radians, sin, cos, sqrt, atan2
 from pygeodesy import GeoidKarney
 from pygeodesy.ellipsoidalKarney import LatLon
 import srtm
+import json
 
 OPEN_TOPOGRAPHY_API_KEY = "826940615389eccaac7f39dbee1218ca" #DO NOT PUBLISH
 
