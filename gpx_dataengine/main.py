@@ -150,6 +150,14 @@ class ElevationProfile:
     def get_distances(self) -> list[float]:
         return self.distances
     
+    def set_elevations(self, elevations: list[float]) -> None:
+        if len(self.points) == len(elevations):
+            for i, elevation in enumerate(elevations):
+                self.points[i].elevation = elevation
+        else: 
+            raise ValueError('Length of the provided elevations should be same as number of points in the ElevationProfile')
+    
+    
 class ElevationPlotter:
 
     @staticmethod
