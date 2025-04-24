@@ -7,6 +7,7 @@
     -   Spline Fit (scipy)
     -   Loess-v1
     -   Loess-v2
+    -   Savitzky-Golay Filter
 
 -   To test locally;
     -   Clone the repository
