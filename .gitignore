@@ -1,0 +1,5 @@
+# folder of virtual environment
+*venv*
+
+# Auto-generated folders
+__pycache__
