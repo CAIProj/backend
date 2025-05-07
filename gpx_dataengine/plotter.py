@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-from main import GPXParser, Point, OpenElevationAPI, ElevationProfile
 from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
+from elevationprofile import ElevationProfile
+from gpxdata import GPXParser, Point
+from elevationapi import OpenElevationAPI
 
 class Plot3D:
 
@@ -112,6 +114,43 @@ def main(main_args):
     except:
         raise
 
+
+class ElevationPlotter:
+
+    @staticmethod
+    def plot_comparison(
+        profile1: ElevationProfile,
+        profile2: ElevationProfile,
+        label1: str = "GPX Elevation",
+        label2: str = "Open-Elevation",
+        title: str = "Elevation Profile Comparison"
+    ):
+        plt.figure(figsize=(12,6))
+
+        plt.plot(
+            profile1.get_distances(),
+            profile1.get_elevations(),
+            label = label1,
+            color = 'blue',
+            linewidth = 2
+        )
+
+        plt.plot(
+            profile2.get_distances(),
+            profile2.get_elevations(),
+            label = label2,
+            color = 'red',
+            linestyle = '--',
+            linewidth = 2
+        )
+
+        plt.title(title)
+        plt.xlabel("Distance (km)")
+        plt.ylabel("Elevation (m)")
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
 
 
 
