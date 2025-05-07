@@ -8,6 +8,9 @@ from elevationprofile import ElevationProfile
 from gpxdata import GPXParser, Point
 from elevationapi import OpenElevationAPI
 
+#TODO: implement a variety of plots
+#TODO: update labels on plots
+
 class Plot3D:
 
     @staticmethod
@@ -81,9 +84,9 @@ class Plot3D:
         plt.tight_layout()
         plt.show()
 
-def main(main_args):
-    file1 = main_args.gpx_file_1
-    file2 = main_args.gpx_file_2
+def plot3d(main_args):
+    file1 = main_args.gpx1
+    file2 = main_args.gpx2
 
     try:
         gpx_points_1 = GPXParser.parse_gpx_file(file1)
@@ -152,15 +155,22 @@ class ElevationPlotter:
         plt.tight_layout()
         plt.show()
 
+def plot2d(args):
+    gpx_file_1 = args.gpx1
+    gpx_file_2 = args.gpx2
 
+    try:
+        gpx_points_1 = GPXParser.parse_gpx_file(gpx_file_1)
+        gpx_points_2 = GPXParser.parse_gpx_file(gpx_file_2)
 
-if __name__ == "__main__":
-    import argparse
+        # truncate longer file
+        min_len = min(len(gpx_points_1), len(gpx_points_2))
+        gpx_points_1 = gpx_points_1[:min_len]
+        gpx_points_2 = gpx_points_2[:min_len]
 
-    parser = argparse.ArgumentParser(description="Compare 2 GPX-files Elevation with API")
-    parser.add_argument("gpx_file_1", help='Path to the first GPX file')
-    parser.add_argument("gpx_file_2", help="Path to the second GPX file")
-    parser.add_argument("mode", default="3d", choices=["3d"], help="What type of plot?: 3d,...")
+        gpx_profile_1 = ElevationProfile(gpx_points_1)
+        gpx_profile_2 = ElevationProfile(gpx_points_2)
 
-    args = parser.parse_args()
-    main(args)
+        ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2)
+    except:
+        raise

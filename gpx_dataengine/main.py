@@ -1,9 +1,12 @@
 from gpxdata import GPXParser, Point
 from elevationapi import OpenElevationAPI, ElevationAPI
 from elevationprofile import ElevationProfile
-from plotter import ElevationPlotter
+from plotter import plot2d, plot3d
 import matplotlib.pyplot as plt
 
+#TODO: Improve parser to handle more options and arguments
+
+#I think this code can be used for a simple plot
 def main(gpx_file_path: str):
     try:
         gpx_points = GPXParser.parse_gpx_file(gpx_file_path)
@@ -39,8 +42,20 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Compare GPX Elevation with API")
-    parser.add_argument("gpx_file", help='Path to the GPX file')
+    parser.add_argument("gpx1", help='Path to the GPX file')
+    parser.add_argument("--gpx2", help='Path to a second GPX file')
+    parser.add_argument("--mode", default="2d", choices=["2d","3d"],help="What kind of plot?")
 
     args = parser.parse_args()
-    main(args.gpx_file)
+
+    if not args.gpx2:
+        print("Simple plot functionality not yet added")
+    else:
+        if args.mode == "2d":
+            plot2d(args)
+        elif args.mode == "3d":
+            plot3d(args)
+        else:
+            print("Invalid options")
+
 
