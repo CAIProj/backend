@@ -1,10 +1,15 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-from main import GPXParser, Point, OpenElevationAPI, ElevationProfile
 from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
+from elevationprofile import ElevationProfile
+from gpxdata import GPXParser, Point
+from elevationapi import OpenElevationAPI
+
+#TODO: implement a variety of plots
+#TODO: update labels on plots
 
 class Plot3D:
 
@@ -79,9 +84,9 @@ class Plot3D:
         plt.tight_layout()
         plt.show()
 
-def main(main_args):
-    file1 = main_args.gpx_file_1
-    file2 = main_args.gpx_file_2
+def plot3d(main_args):
+    file1 = main_args.gpx1
+    file2 = main_args.gpx2
 
     try:
         gpx_points_1 = GPXParser.parse_gpx_file(file1)
@@ -113,15 +118,59 @@ def main(main_args):
         raise
 
 
+class ElevationPlotter:
 
+    @staticmethod
+    def plot_comparison(
+        profile1: ElevationProfile,
+        profile2: ElevationProfile,
+        label1: str = "GPX Elevation",
+        label2: str = "Open-Elevation",
+        title: str = "Elevation Profile Comparison"
+    ):
+        plt.figure(figsize=(12,6))
 
-if __name__ == "__main__":
-    import argparse
+        plt.plot(
+            profile1.get_distances(),
+            profile1.get_elevations(),
+            label = label1,
+            color = 'blue',
+            linewidth = 2
+        )
 
-    parser = argparse.ArgumentParser(description="Compare 2 GPX-files Elevation with API")
-    parser.add_argument("gpx_file_1", help='Path to the first GPX file')
-    parser.add_argument("gpx_file_2", help="Path to the second GPX file")
-    parser.add_argument("mode", default="3d", choices=["3d"], help="What type of plot?: 3d,...")
+        plt.plot(
+            profile2.get_distances(),
+            profile2.get_elevations(),
+            label = label2,
+            color = 'red',
+            linestyle = '--',
+            linewidth = 2
+        )
 
-    args = parser.parse_args()
-    main(args)
+        plt.title(title)
+        plt.xlabel("Distance (km)")
+        plt.ylabel("Elevation (m)")
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+def plot2d(args):
+    gpx_file_1 = args.gpx1
+    gpx_file_2 = args.gpx2
+
+    try:
+        gpx_points_1 = GPXParser.parse_gpx_file(gpx_file_1)
+        gpx_points_2 = GPXParser.parse_gpx_file(gpx_file_2)
+
+        # truncate longer file
+        min_len = min(len(gpx_points_1), len(gpx_points_2))
+        gpx_points_1 = gpx_points_1[:min_len]
+        gpx_points_2 = gpx_points_2[:min_len]
+
+        gpx_profile_1 = ElevationProfile(gpx_points_1)
+        gpx_profile_2 = ElevationProfile(gpx_points_2)
+
+        ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2)
+    except:
+        raise
