@@ -1,6 +1,6 @@
 import requests
 import json
-from .gpx_parser import Point
+from .models import Point
 
 
 class ElevationAPI:

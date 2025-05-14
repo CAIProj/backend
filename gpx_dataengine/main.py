@@ -1,7 +1,8 @@
 from matplotlib import pyplot as plt
 from .elevation_apis import OpenElevationAPI, ElevationAPI
-from .gpx_parser import Point, GPXParser
-from geo_tools import ElevationProfile, ElevationPlotter
+from .models import Point, ElevationProfile
+from .gpx_parser import GPXParser
+from geo_tools import ElevationPlotter
 
 # REVIEW: if this is not used then remove it from here and from README.md file too
 # import srtm 

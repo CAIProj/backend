@@ -1,20 +1,8 @@
-from dataclasses import dataclass
 from pygeodesy import GeoidKarney
 from pygeodesy.ellipsoidalKarney import LatLon
 import gpxpy
-from typing import Optional
+from .models import Point
 
-
-@dataclass
-class Point:
-    "Represents a geographical point (log, lat, elevation)"
-    latitude: float
-    longitude: float
-    elevation: Optional[float] = None
-
-    def to_dict(self):
-        return {'latitude': self.latitude, 'longitude': self.longitude}
-    
 class GPXParser:
     "Extracts point from GPX files"
 

@@ -1,22 +1,35 @@
-from .gpx_parser import Point
+from dataclasses import dataclass
+from typing import Optional
+from .geo_tools import GeoCalculator
 from math import radians, sin, cos, sqrt, atan2
-import matplotlib.pyplot as plt
 
-class GeoCalculator:
-    EARTH_RADIUS_KM = 6371.0
 
+@dataclass
+class Point:
+    "Represents a geographical point (log, lat, elevation)"
+    latitude: float
+    longitude: float
+    elevation: Optional[float] = None
+
+    def to_dict(self):
+        return {'latitude': self.latitude, 'longitude': self.longitude}
+    
     @staticmethod
-    def haversine_distance(point1: Point, point2: Point) -> float:
+    def haversine_distance(point1: 'Point', point2: 'Point') -> float:
+        """Calculate the Haversine distance between two points."""
         lat1, lon1 = radians(point1.latitude), radians(point1.longitude)
         lat2, lon2 = radians(point2.latitude), radians(point2.longitude)
 
         d_lat = lat2 - lat1
         d_lon = lon2 - lon1
 
-        a = sin(d_lat/2)**2 + cos(lat1)*cos(lat2)*sin(d_lon/2)**2
-        c = 2*atan2(sqrt(a), sqrt(1-a))
+        a = sin(d_lat / 2)**2 + cos(lat1) * cos(lat2) * sin(d_lon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-        return GeoCalculator.EARTH_RADIUS_KM * c
+        # Earth's radius in kilometers
+        EARTH_RADIUS_KM = 6371.0
+        return EARTH_RADIUS_KM * c
+    
 
 class ElevationProfile:
     def __init__(self, points: list[Point]):
@@ -52,41 +65,3 @@ class ElevationProfile:
                 self.points[i].elevation = elevation
         else: 
             raise ValueError('Length of the provided elevations should be same as number of points in the ElevationProfile')
-    
-    
-class ElevationPlotter:
-
-    @staticmethod
-    def plot_comparison(
-        profile1: ElevationProfile,
-        profile2: ElevationProfile,
-        label1: str = "GPX Elevation",
-        label2: str = "Open-Elevation",
-        title: str = "Elevation Profile Comparison"
-    ):
-        plt.figure(figsize=(12,6))
-
-        plt.plot(
-            profile1.get_distances(),
-            profile1.get_elevations(),
-            label = label1,
-            color = 'blue',
-            linewidth = 2
-        )
-
-        plt.plot(
-            profile2.get_distances(),
-            profile2.get_elevations(),
-            label = label2,
-            color = 'red',
-            linestyle = '--',
-            linewidth = 2
-        )
-
-        plt.title(title)
-        plt.xlabel("Distance (km)")
-        plt.ylabel("Elevation (m)")
-        plt.grid(True, alpha=0.3)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
