@@ -10,4 +10,7 @@ class Point:
     elevation: Optional[float] = None
 
     def to_dict(self) -> dict:
-        return {'latitude': self.latitude, 'longitude': self.longitude}
+        data = {'latitude': self.latitude, 'longitude': self.longitude}
+        if self.elevation is not None:
+            data['elevation'] = self.elevation
+        return data
