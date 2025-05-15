@@ -1,4 +1,4 @@
-from gpxdata import Point
+from models import Point
 import requests
 import json
 

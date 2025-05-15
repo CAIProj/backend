@@ -5,7 +5,8 @@ from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from elevationprofile import ElevationProfile
-from gpxdata import GPXParser, Point
+from gpxdata import GPXParser
+from models import Point
 from elevationapi import OpenElevationAPI
 
 #TODO: implement a variety of plots

@@ -1,4 +1,4 @@
-from gpxdata import Point
+from models import Point
 from math import radians, sin, cos, atan2, sqrt
 
 
