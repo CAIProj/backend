@@ -4,6 +4,7 @@ from elevationapi import OpenElevationAPI, ElevationAPI
 from elevationprofile import ElevationProfile
 from plotter import plot2d, plot3d
 import matplotlib.pyplot as plt
+from plotter import ElevationPlotter
 
 #TODO: Improve parser to handle more options and arguments
 
