@@ -1,7 +1,9 @@
+from pygeodesy import GeoidKarney
+from pygeodesy.ellipsoidalKarney import LatLon
+import gpxpy
 from dataclasses import dataclass
-from typing import Optional, ClassVar
 import math
-
+from typing import Optional, ClassVar
 
 @dataclass
 class Point:
@@ -152,3 +154,91 @@ class ElevationProfile:
         else:
             raise ValueError(
                 'Length of the provided elevations should be same as number of points in the ElevationProfile')
+
+
+class Track:
+    def __init__(self, points: list[Point]):
+        """
+        Initialize a Track with a list of Points.
+
+        Args:
+            points (list[Point]): Ordered list of geographical Points.
+        """
+        self.points = points
+        self._profile: Optional[ElevationProfile] = None
+
+    @property
+    def profile(self) -> ElevationProfile:
+        """Lazy-loaded ElevationProfile for this Track."""
+        if self._profile is None:
+            self._profile = ElevationProfile(self.points)
+        return self._profile
+
+    @classmethod
+    def from_gpx(cls, gpx_file_path: str) -> 'Track':
+        """
+        Factory method to load a Track from a GPX file.
+
+        Args:
+            gpx_file_path (str): Path to a GPX file containing track data.
+
+        Returns:
+            Track: Instance with Points extracted from the GPX.
+
+        Raises:
+            FileNotFoundError: If the GPX file is not found.
+            IOError: If there is an error reading the file.
+            ValueError: If the GPX content cannot be parsed.
+        """
+        # Read the gpx file
+        try:
+            with open(gpx_file_path, 'r', encoding='utf-8') as f:
+                gpx_text = f.read()
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"GPX file not found: {gpx_file_path}") from e
+        except Exception as e:
+            raise IOError(f"Error reading GPX file: {gpx_file_path}") from e
+
+        # Parse the file content
+        try:
+            gpx = gpxpy.parse(gpx_text)
+        except Exception as e:
+            raise ValueError(f"Failed to parse GPX content from: {gpx_file_path}") from e
+
+        points: list[Point] = []
+        geoid = GeoidKarney("egm2008-5.pgm")
+        for tr in gpx.tracks:
+            for seg in tr.segments:
+                for pt in seg.points:
+                    location = LatLon(pt.latitude, pt.longitude)
+                    height = geoid(location)
+                    points.append(Point(latitude=pt.latitude, longitude=pt.longitude,
+                                        elevation=pt.elevation - height))
+        return cls(points)
+
+    def get_latitudes(self) -> list[float]:
+        """
+        Returns the list of latitudes for all Points in the track.
+
+        Returns:
+            list[float]: Latitudes of the points in the track.
+        """
+        return [p.latitude for p in self.points]
+
+    def get_longitudes(self) -> list[float]:
+        """
+        Returns the list of longitudes for all Points in the track.
+
+        Returns:
+            list[float]: Longitudes of the points in the track.
+        """
+        return [p.longitude for p in self.points]
+
+    def get_elevations(self) -> list[Optional[float]]:
+        """
+        Returns the list of elevations for all Points in the track.
+
+        Returns:
+            list[Optional[float]]: Elevations of the points in the track.
+        """
+        return [p.elevation for p in self.points]
