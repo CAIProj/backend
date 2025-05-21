@@ -1,6 +1,6 @@
 from gpxdata import GPXParser
 from models import Point, ElevationProfile
-from elevationapi import OpenElevationAPI, ElevationAPI
+from elevation_api import OpenElevationAPI, ElevationAPI
 from plotter import plot2d, plot3d
 import matplotlib.pyplot as plt
 from plotter import ElevationPlotter

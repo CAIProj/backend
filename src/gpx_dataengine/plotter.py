@@ -6,7 +6,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from gpxdata import GPXParser
 from models import Point, ElevationProfile
-from elevationapi import OpenElevationAPI
+from elevation_api import OpenElevationAPI
 
 #TODO: implement a variety of plots
 #TODO: update labels on plots
