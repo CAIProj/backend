@@ -4,8 +4,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-from gpxdata import GPXParser
-from models import Point, ElevationProfile
+from models import Point, ElevationProfile, Track
 from elevation_api import OpenElevationAPI
 
 #TODO: implement a variety of plots
@@ -89,28 +88,25 @@ def plot3d(main_args):
     file2 = main_args.gpx2
 
     try:
-        gpx_points_1 = GPXParser.parse_gpx_file(file1)
-        gpx_points_2 = GPXParser.parse_gpx_file(file2)
+        track_1 = Track.from_gpx_file(file1)
+        track_2 = Track.from_gpx_file(file2)
 
         #truncate longer file
-        min_len = min(len(gpx_points_1),len(gpx_points_2))
-        gpx_points_1 = gpx_points_1[:min_len]
-        gpx_points_2 = gpx_points_2[:min_len]
+        min_len = min(len(track_1.points), len(track_2.points))
+        track_1.points = track_1.points[:min_len]
+        track_2.points = track_2.points[:min_len]
 
-        api_points_1 = [Point(p.latitude, p.longitude) for p in gpx_points_1]
+        api_points_1 = [Point(p.latitude, p.longitude) for p in track_1.points]
         api_points_1 = OpenElevationAPI.get_elevations(api_points_1)
-
-        api_points_2 = [Point(p.latitude, p.longitude) for p in gpx_points_2]
-        api_points_2 = OpenElevationAPI.get_elevations(api_points_2)
-
-        gpx_profile_1 = ElevationProfile(gpx_points_1)
-        gpx_profile_2 = ElevationProfile(gpx_points_2)
         api_profile_1 = ElevationProfile(api_points_1)
+
+        api_points_2 = [Point(p.latitude, p.longitude) for p in track_2.points]
+        api_points_2 = OpenElevationAPI.get_elevations(api_points_2)
         api_profile_2 = ElevationProfile(api_points_2)
 
         Plot3D.plot_comparison(
-            gpx_profile_1,
-            gpx_profile_2,
+            track_1.elevation_profile,
+            track_2.elevation_profile,
             api_profile_1,
             api_profile_2
         )
@@ -160,17 +156,14 @@ def plot2d(args):
     gpx_file_2 = args.gpx2
 
     try:
-        gpx_points_1 = GPXParser.parse_gpx_file(gpx_file_1)
-        gpx_points_2 = GPXParser.parse_gpx_file(gpx_file_2)
+        track_1 = Track.from_gpx_file(gpx_file_1)
+        track_2 = Track.from_gpx_file(gpx_file_2)
 
         # truncate longer file
-        min_len = min(len(gpx_points_1), len(gpx_points_2))
-        gpx_points_1 = gpx_points_1[:min_len]
-        gpx_points_2 = gpx_points_2[:min_len]
+        min_len = min(len(track_1.points), len(track_2.points))
+        track_1.points = track_1.points[:min_len]
+        track_2.points = track_2.points[:min_len]
 
-        gpx_profile_1 = ElevationProfile(gpx_points_1)
-        gpx_profile_2 = ElevationProfile(gpx_points_2)
-
-        ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2)
+        ElevationPlotter.plot_comparison(track_1.elevation_profile, track_2.elevation_profile)
     except:
         raise

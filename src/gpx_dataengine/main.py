@@ -1,4 +1,3 @@
-from gpxdata import GPXParser
 from models import Point, ElevationProfile
 from elevation_api import OpenElevationAPI, ElevationAPI
 from plotter import plot2d, plot3d
