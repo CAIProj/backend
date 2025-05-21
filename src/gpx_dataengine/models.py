@@ -164,18 +164,44 @@ class Track:
         Args:
             points (list[Point]): Ordered list of geographical Points.
         """
-        self.points = points
-        self._profile: Optional[ElevationProfile] = None
+        self._points = list(points)
+        self._elevation_profile: Optional[ElevationProfile] = None
 
     @property
-    def profile(self) -> ElevationProfile:
+    def points(self) -> list[Point]:
+        """
+        Gets the list of Points in the track.
+
+        Returns:
+            list[Point]: Ordered list of geographical Points.
+        """
+        return self._points
+    
+    @points.setter
+    def points(self, new_points: list[Point]) -> None:
+        """
+        Sets the list of Points in the track and resets the elevation profile.
+
+        Args:
+            new_points (list[Point]): New list of Points to replace the current one.
+
+        Raises:
+            ValueError: If the input is not a list of Points.
+        """
+        if not isinstance(new_points, list) or not all(isinstance(p, Point) for p in new_points):
+            raise ValueError("points must be a list of Point instances.")
+        self._points = new_points
+        self._elevation_profile = None
+
+    @property
+    def elevation_profile(self) -> ElevationProfile:
         """Lazy-loaded ElevationProfile for this Track."""
-        if self._profile is None:
-            self._profile = ElevationProfile(self.points)
-        return self._profile
+        if self._elevation_profile is None:
+            self._elevation_profile = ElevationProfile(self.points)
+        return self._elevation_profile
 
     @classmethod
-    def from_gpx(cls, gpx_file_path: str) -> 'Track':
+    def from_gpx_file(cls, gpx_file_path: str) -> 'Track':
         """
         Factory method to load a Track from a GPX file.
 
