@@ -154,6 +154,30 @@ class ElevationProfile:
         else:
             raise ValueError(
                 'Length of the provided elevations should be same as number of points in the ElevationProfile')
+        
+    def get_elevation_parameters(self) -> tuple[float, float, float, float]:
+        """
+        Returns elevation metrics for the profile.
+
+        Returns:
+            tuple: (ascend, descend, greatest_ascend, greatest_descend)
+        """
+        ascend = 0
+        descend = 0
+        greatest_ascend = 0
+        greatest_descend = 0
+        elevations = self.get_elevations()
+
+        for i in range(len(elevations) - 1):
+            delta = elevations[i + 1] - elevations[i]
+            if delta > 0:
+                ascend += delta
+                greatest_ascend = max(greatest_ascend, delta)
+            else:
+                descend += abs(delta)
+                greatest_descend = max(greatest_descend, abs(delta))
+
+        return ascend, descend, greatest_ascend, greatest_descend
 
 
 class Track:

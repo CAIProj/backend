@@ -3,26 +3,6 @@ from matplotlib import pyplot as plt
 import gpxpy
 import gpxpy.gpx
 
-def get_elevation_parameters(segment: gpxpy.gpx.GPXTrackSegment):
-    ascend = 0
-    descend = 0
-    greatest_ascend = 0
-    greatest_descend = 0
-    points = segment.points
-
-    for i in range(len(points) - 1):
-        elevation_interval = points[i + 1].elevation - points[i].elevation
-        if elevation_interval > 0:
-            ascend += elevation_interval
-            if elevation_interval > greatest_ascend:
-                greatest_ascend = elevation_interval
-        else:
-            descend += abs(elevation_interval)
-            if abs(elevation_interval) > greatest_descend:
-                greatest_descend = abs(elevation_interval)
-
-    return ascend, descend, greatest_ascend, greatest_descend
-
 
 def plot(segment: gpxpy.gpx.GPXTrackSegment, name: str):
     dist_points = get_distance_points(segment)
