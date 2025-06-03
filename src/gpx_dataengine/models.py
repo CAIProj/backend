@@ -165,7 +165,7 @@ class ElevationProfile:
             raise ValueError(
                 'Length of the provided elevations should be same as number of points in the ElevationProfile')
         
-    def get_elevation_parameters(self) -> tuple[float, float, float, float]:
+    def get_elevation_stats(self) -> tuple[float, float, float, float]:
         """
         Returns elevation metrics for the profile.
 
@@ -210,6 +210,7 @@ class Track:
         """
         self._points = list(points)
         self._elevation_profile: Optional[ElevationProfile] = None
+        self._total_distance: Optional[float] = None
 
     @property
     def points(self) -> list[Point]:
@@ -236,13 +237,38 @@ class Track:
             raise ValueError("points must be a list of Point instances.")
         self._points = new_points
         self._elevation_profile = None
+        self._total_distance = None
 
     @property
     def elevation_profile(self) -> ElevationProfile:
-        """Lazy-loaded ElevationProfile for this Track."""
+        """
+        Provides the ElevationProfile for this Track based on the current points.
+
+        Returns:
+            ElevationProfile: Elevation profile created from the track's points.
+        """
         if self._elevation_profile is None:
             self._elevation_profile = ElevationProfile(self.points)
         return self._elevation_profile
+    
+    @property
+    def total_distance(self) -> float:
+        """
+        Compute the total Haversine distance of the track in kilometers.
+
+        Returns:
+            float: Total distance (in kilometers) from the start up to that point.
+        """
+        if self._total_distance is None:
+            if len(self._points) < 2:
+                self._total_distance = 0.0
+            else:
+                distance = 0.0
+                for i in range(len(self._points) - 1):
+                    distance += self._points[i].distance_to(self._points[i + 1])
+                self._total_distance = distance
+
+        return self._total_distance
 
     @classmethod
     def from_gpx_file(cls, gpx_file_path: str) -> 'Track':
