@@ -91,24 +91,27 @@ def plot3d(main_args):
         track_1 = Track.from_gpx_file(file1)
         track_2 = Track.from_gpx_file(file2)
 
-        #truncate longer file
+        # Truncate longer file
         min_len = min(len(track_1.points), len(track_2.points))
         track_1.points = track_1.points[:min_len]
         track_2.points = track_2.points[:min_len]
 
-        api_points_1 = [Point(p.latitude, p.longitude) for p in track_1.points]
-        api_points_1 = OpenElevationAPI.get_elevations(api_points_1)
-        api_profile_1 = ElevationProfile(api_points_1)
+        # Create profiles for evelvations from api
+        elevations_from_openelevation_1 = OpenElevationAPI.get_elevations(track_1.points)
+        elevation_profile_1 = track_1.elevation_profile.copy()
+        elevation_profile_1.set_elevations(elevations_from_openelevation_1)
 
-        api_points_2 = [Point(p.latitude, p.longitude) for p in track_2.points]
-        api_points_2 = OpenElevationAPI.get_elevations(api_points_2)
-        api_profile_2 = ElevationProfile(api_points_2)
+        elevations_from_openelevation_2 = OpenElevationAPI.get_elevations(track_2.points)
+        elevation_profile_2 = track_2.elevation_profile.copy()
+        elevation_profile_2.set_elevations(elevations_from_openelevation_2)
 
+
+        # Plot the comparison plot
         Plot3D.plot_comparison(
             track_1.elevation_profile,
             track_2.elevation_profile,
-            api_profile_1,
-            api_profile_2
+            elevation_profile_1,
+            elevation_profile_2,
         )
     except:
         raise

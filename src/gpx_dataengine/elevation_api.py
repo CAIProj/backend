@@ -80,29 +80,34 @@ def compare_elevation_apis(gpx_file_path: str):
     try:
         track = Track.from_gpx_file(gpx_file_path)
 
-        track_points_lat_long = [Point(p.latitude, p.longitude) for p in track.points]
+        # Get elevations from both apis
+        elevations_from_openelevation = OpenElevationAPI.get_elevations(track.points)
+        elevations_from_openstreetmap = ElevationAPI.get_elevations(track.points)
 
-        api_points_1 = OpenElevationAPI.get_elevations(track_points_lat_long.copy())
-        api_profile_1 = ElevationProfile(api_points_1)
+        # Create profiles for api elevations
+        openelevation_elevation_profile = track.elevation_profile.copy()
+        openelevation_elevation_profile.set_elevations(elevations_from_openelevation) 
 
-        api_points_2 = ElevationAPI.get_elevations(track_points_lat_long.copy())
-        api_profile_2 = ElevationProfile(api_points_2)
+        openstreetmap_elevation_profile = track.elevation_profile.copy()
+        openstreetmap_elevation_profile.set_elevations(elevations_from_openstreetmap)
 
+
+        # Plot comparision plots
         ElevationPlotter.plot_comparison(
             track.elevation_profile,
-            api_profile_1,
+            openelevation_elevation_profile,
             title=f"Elevation Profile Comparison (OpenElevationAPI)\n{gpx_file_path}"
         )
 
         ElevationPlotter.plot_comparison(
             track.elevation_profile,
-            api_profile_2,
+            openstreetmap_elevation_profile,
             title=f"Elevation Profile Comparison (ElevationAPI)\n{gpx_file_path}"
         )
 
         plt.figure(figsize=(12, 6))
-        plt.plot(api_profile_1.get_distances(), api_profile_1.get_elevations(), label="OpenElevationAPI", color="red")
-        plt.plot(api_profile_2.get_distances(), api_profile_2.get_elevations(), label="ElevationAPI", color="blue", linestyle="--")
+        plt.plot(openelevation_elevation_profile.get_distances(), openelevation_elevation_profile.get_elevations(), label="OpenElevationAPI", color="red")
+        plt.plot(openstreetmap_elevation_profile.get_distances(), openstreetmap_elevation_profile.get_elevations(), label="ElevationAPI", color="blue", linestyle="--")
         plt.legend()
         plt.grid(True, alpha=0.3)
         plt.title("OpenElevationAPI vs ElevationAPI")
