@@ -30,7 +30,7 @@ class Point:
         Convert the Point to a dictionary.
 
         Returns:
-            dict: A mapping with keys'latitude' and 'longitude', and 'elevation' if available.
+            dict: A mapping with keys 'latitude', 'longitude', and 'elevation' if available.
         """
         data = {'latitude': self.latitude, 'longitude': self.longitude}
         if self.elevation is not None:
@@ -72,6 +72,16 @@ class Point:
             float: Distance from this point to 'other' in kilometers.
         """
         return Point.haversine_distance(self, other)
+
+    def copy(self) -> "Point":
+        """
+        Create a copy of this Point.
+
+        Returns:
+            Point: A new Point instance with the same latitude, longitude, and elevation.
+        """
+        return Point(self.latitude, self.longitude, self.elevation)
+
     
     
 class ElevationProfile:
@@ -178,6 +188,16 @@ class ElevationProfile:
                 greatest_descend = max(greatest_descend, abs(delta))
 
         return ascend, descend, greatest_ascend, greatest_descend
+    
+    def copy(self) -> "ElevationProfile":
+        """
+        Create a deep copy of this ElevationProfile.
+
+        Returns:
+            ElevationProfile: A new instance with duplicated Points and distances.
+        """
+        new_points = [p.copy() for p in self.points]
+        return ElevationProfile(new_points)
 
 
 class Track:
