@@ -6,6 +6,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from models import Point, ElevationProfile, Track
 from elevation_api import OpenElevationAPI
+from typing import Optional, List, Union, Tuple, Dict
 
 #TODO: implement a variety of plots
 #TODO: update labels on plots
@@ -170,3 +171,92 @@ def plot2d(args):
         ElevationPlotter.plot_comparison(track_1.elevation_profile, track_2.elevation_profile)
     except:
         raise
+
+class Plotter:
+    def __init__(self, profiles: Optional[List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]] = None) -> None:
+        """
+        Initialize the Plotter with an optional list of ElevationProfile instances or (ElevationProfile, name) tuples.
+
+        Args:
+            profiles (Optional[List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]]): 
+                List of ElevationProfile instances or (ElevationProfile, name) tuples. 
+                Defaults to None.
+        """
+        self.profiles: Dict[str, ElevationProfile] = {}
+        if profiles:
+            self.add_profiles(*profiles)
+
+    def _generate_unique_name(self) -> str:
+        """
+        Generate a unique name like 'Profile 1', 'Profile 2', etc.
+
+        Returns:
+            str: Generated unique name.
+        """
+        idx = 1
+        while f"Profile {idx}" in self.profiles:
+            idx += 1
+        return f"Profile {idx}"
+
+    def add_profiles(
+            self, 
+            *profiles_with_names: Union[
+                ElevationProfile, 
+                Tuple[ElevationProfile, Optional[str]]
+            ]
+        ) -> None:
+        """
+        Add one or more ElevationProfile instances with optional names.
+
+        Args:
+            *profiles_with_names (Union[ElevationProfile, Tuple[ElevationProfile, Optional[str]]]): One or more ElevationProfile instances or 
+                (ElevationProfile, name) tuples.
+
+        Raises:
+            ValueError: If the provided input is not valid.
+
+        Examples:
+            >>> plotter.add_profiles(profile)  # Auto-named
+            >>> plotter.add_profiles((profile, "Hike"))
+            >>> plotter.add_profiles((profile1, "Morning"), (profile2, "Evening"))
+        """
+        for item in profiles_with_names:
+            if isinstance(item, ElevationProfile):
+                # No name provided, auto-generate
+                name = self._generate_unique_name()
+                self.profiles[name] = item
+            elif isinstance(item, tuple) and isinstance(item[0], ElevationProfile):
+                profile = item[0]
+                name = item[1] if item[1] else self._generate_unique_name()
+                self.profiles[name] = profile
+            else:
+                raise ValueError("Provide either ElevationProfile or (ElevationProfile, name) tuples.")
+
+    def set_profiles(self, profiles_dict: Dict[str, ElevationProfile]) -> None:
+        """
+        Replace all existing profiles with the given dictionary of profiles.
+
+        Args:
+            profiles_dict (Dict[str, ElevationProfile]): 
+                Dictionary mapping names to ElevationProfile instances. 
+                If the name is empty or invalid, a unique name will be generated.
+
+        Raises:
+            TypeError: If profiles_dict is not a dictionary.
+            ValueError: If any profile is not an ElevationProfile instance.
+        """
+        if not isinstance(profiles_dict, dict):
+            raise TypeError("Profiles must be provided as a dictionary {name: ElevationProfile}.")
+
+        # Clear current profiles
+        self.profiles = {}
+
+        # Add each profile one by one using add_profiles
+        for name, profile in profiles_dict.items():
+            if not isinstance(profile, ElevationProfile):
+                raise ValueError(f"Invalid profile for {name!r}: must be an ElevationProfile.")
+            # If name is None/empty, let add_profiles auto-generate
+            if not name or not isinstance(name, str) or name.strip() == "":
+                self.add_profiles(profile)  # Auto-generate name
+            else:
+                self.add_profiles((profile, name.strip()))
