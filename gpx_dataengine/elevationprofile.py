@@ -55,3 +55,10 @@ class ElevationProfile:
             raise ValueError(
                 'Length of the provided elevations should be same as number of points in the ElevationProfile')
 
+    def set_distances(self, distances: list[float]) -> None:
+        #This method would be used to modify the distances to manipulate the plot for plot comparisons
+        if len(self.distances) == len(distances):
+            for i, distance in enumerate(distances):
+                self.distances[i] = distance
+            else:
+                raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
