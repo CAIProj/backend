@@ -198,6 +198,25 @@ class ElevationProfile:
         """
         new_points = [p.copy() for p in self.points]
         return ElevationProfile(new_points)
+    
+    def set_distances(self, distances: list[float]) -> None:
+        """
+        Update the cumulative distances of the profile.
+
+        This method allows overriding the automatically calculated distances,
+        which can be useful for customized visualizations or comparisons.
+
+        Args:
+            distances (list[float]): New cumulative distances (in kilometers) corresponding to each point.
+
+        Raises:
+            ValueError: If the length of distances does not match the number of points in this profile.
+        """
+        if len(self.distances) == len(distances):
+            for i, distance in enumerate(distances):
+                self.distances[i] = distance
+            else:
+                raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
 
 
 class Track:
