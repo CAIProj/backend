@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-from models import Point, ElevationProfile, Track
+from models import ElevationProfile, Track
 from elevation_api import OpenElevationAPI
 from typing import Optional, List, Union, Tuple, Dict
 
@@ -117,61 +116,6 @@ def plot3d(main_args):
     except:
         raise
 
-
-class ElevationPlotter:
-
-    @staticmethod
-    def plot_comparison(
-        profile1: ElevationProfile,
-        profile2: ElevationProfile,
-        label1: str = "GPX Elevation",
-        label2: str = "Open-Elevation",
-        title: str = "Elevation Profile Comparison"
-    ):
-        plt.figure(figsize=(12,6))
-
-        plt.plot(
-            profile1.get_distances(),
-            profile1.get_elevations(),
-            label = label1,
-            color = 'blue',
-            linewidth = 2
-        )
-
-        plt.plot(
-            profile2.get_distances(),
-            profile2.get_elevations(),
-            label = label2,
-            color = 'red',
-            linestyle = '--',
-            linewidth = 2
-        )
-
-        plt.title(title)
-        plt.xlabel("Distance (km)")
-        plt.ylabel("Elevation (m)")
-        plt.grid(True, alpha=0.3)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-
-def plot2d(args):
-    gpx_file_1 = args.gpx1
-    gpx_file_2 = args.gpx2
-
-    try:
-        track_1 = Track.from_gpx_file(gpx_file_1)
-        track_2 = Track.from_gpx_file(gpx_file_2)
-
-        # truncate longer file
-        min_len = min(len(track_1.points), len(track_2.points))
-        track_1.points = track_1.points[:min_len]
-        track_2.points = track_2.points[:min_len]
-
-        ElevationPlotter.plot_comparison(track_1.elevation_profile, track_2.elevation_profile)
-    except:
-        raise
-
 class Plotter:
     def __init__(self, profiles: Optional[List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]] = None) -> None:
         """
@@ -260,3 +204,38 @@ class Plotter:
                 self.add_profiles(profile)  # Auto-generate name
             else:
                 self.add_profiles((profile, name.strip()))
+    
+    def plot_distance_vs_elevation(
+        self,
+        title: str = "Elevation Comparison",
+        xlabel: str = "Distance (km)",
+        ylabel: str = "Elevation (m)"
+    ) -> None:
+        """
+        Plot elevation vs distance for all stored profiles.
+
+        Args:
+            title (str, optional): Title of the plot. Defaults to "Elevation Profiles Comparison".
+            xlabel (str, optional): Label for the x-axis. Defaults to "Distance (km)".
+            ylabel (str, optional): Label for the y-axis. Defaults to "Elevation (m)".
+        """
+        if not self.profiles:
+            print("No profiles to plot.")
+            return
+
+        plt.figure(figsize=(12, 6))
+        for name, profile in self.profiles.items():
+            plt.plot(
+                profile.get_distances(),
+                profile.get_elevations(),
+                label=name,
+                linewidth=2
+            )
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
