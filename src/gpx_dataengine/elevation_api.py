@@ -75,7 +75,7 @@ class OpenElevationAPI:
 
 # Standalone comparison plot using both APIs
 def compare_elevation_apis(gpx_file_path: str):
-    from plotter import ElevationPlotter  # Delayed import to avoid circular dependency with plotter.py
+    from plotter import Plotter  # Delayed import to avoid circular dependency with plotter.py
 
     try:
         track = Track.from_gpx_file(gpx_file_path)
@@ -93,29 +93,20 @@ def compare_elevation_apis(gpx_file_path: str):
 
 
         # Plot comparision plots
-        ElevationPlotter.plot_comparison(
-            track.elevation_profile,
-            openelevation_elevation_profile,
-            title=f"Elevation Profile Comparison (OpenElevationAPI)\n{gpx_file_path}"
+        plotter1 = Plotter()
+        plotter1.add_profiles(
+            (track.elevation_profile, 'From GPX file'),
+            (openelevation_elevation_profile, 'From Openelevation API'),
         )
-
-        ElevationPlotter.plot_comparison(
-            track.elevation_profile,
-            openstreetmap_elevation_profile,
-            title=f"Elevation Profile Comparison (ElevationAPI)\n{gpx_file_path}"
+        plotter1.plot_distance_vs_elevation()
+        
+        plotter2 = Plotter()
+        plotter2.add_profiles(
+            (track.elevation_profile, 'From GPX file'),
+            (openstreetmap_elevation_profile, 'From Openstreetmap API') 
         )
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(openelevation_elevation_profile.get_distances(), openelevation_elevation_profile.get_elevations(), label="OpenElevationAPI", color="red")
-        plt.plot(openstreetmap_elevation_profile.get_distances(), openstreetmap_elevation_profile.get_elevations(), label="ElevationAPI", color="blue", linestyle="--")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.title("OpenElevationAPI vs ElevationAPI")
-        plt.xlabel("Distance (km)")
-        plt.ylabel("Elevation (m)")
-        plt.tight_layout()
-        plt.show()
-
+        plotter2.plot_distance_vs_elevation()
+        
     except Exception as e:
         print(f"An error occurred during comparison: {e}")
         raise
