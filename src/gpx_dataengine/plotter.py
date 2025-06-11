@@ -239,3 +239,43 @@ class Plotter:
         plt.legend()
         plt.tight_layout()
         plt.show()
+    
+    def plot_3d_lat_lon_elevation(
+        self,
+        title: str = "3D Plot of Elevation Profiles",
+        xlabel: str = "Latitude",
+        ylabel: str = "Longitude",
+        zlabel: str = "Elevation (m)"
+    ) -> None:
+        """
+        Plot 3D trajectories of stored elevation profiles using latitude, longitude, and elevation.
+
+        Args:
+            title (str, optional): Title for the plot. Defaults to "3D Plot of Elevation Profiles".
+            xlabel (str, optional): Label for the x-axis. Defaults to "Latitude".
+            ylabel (str, optional): Label for the y-axis. Defaults to "Longitude".
+            zlabel (str, optional): Label for the z-axis. Defaults to "Elevation (m)".
+        """
+        if not self.profiles:
+            print("No profiles to plot.")
+            return
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+
+        for name, profile in self.profiles.items():
+            ax.plot(
+                profile.get_latitudes(),
+                profile.get_longitudes(),
+                profile.get_elevations(),
+                label=name,
+                linewidth=1.5,
+            )
+
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_zlabel(zlabel)
+        ax.legend()
+        plt.tight_layout()
+        plt.show()
