@@ -1,4 +1,5 @@
-from plotter import plot3d, Plotter
+from compare_elevations import plot3d
+from plotter import Plotter
 from models import Track
 
 #TODO: Improve parser to handle more options and arguments
