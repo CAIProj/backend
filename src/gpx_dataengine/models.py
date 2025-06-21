@@ -215,8 +215,8 @@ class ElevationProfile:
         if len(self.distances) == len(distances):
             for i, distance in enumerate(distances):
                 self.distances[i] = distance
-            else:
-                raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
+        else:
+            raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
 
 
 class Track:
