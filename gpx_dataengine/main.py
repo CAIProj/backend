@@ -1,61 +1,50 @@
-from gpxdata import GPXParser, Point
-from elevationapi import OpenElevationAPI, ElevationAPI
-from elevationprofile import ElevationProfile
-from plotter import plot2d, plot3d
-import matplotlib.pyplot as plt
+from plotter import plot2d, plot3d, plot_surface
+import argparse
 
-#TODO: Improve parser to handle more options and arguments
-
-#I think this code can be used for a simple plot
-def main(gpx_file_path: str):
-    try:
-        gpx_points = GPXParser.parse_gpx_file(gpx_file_path)
-
-        api_points = [Point(p.latitude, p.longitude) for p in gpx_points]
-        api_points = OpenElevationAPI.get_elevations(api_points)
-        api_2_points = ElevationAPI.get_elevations(api_points)
-
-        gpx_profile = ElevationProfile(gpx_points)
-        api_profile = ElevationProfile(api_points)
-        api_2_profile = ElevationProfile(api_2_points)
-
-        ElevationPlotter.plot_comparison(
-            gpx_profile,
-            api_profile,
-            title=f"Elevation Profile Comparison\n{gpx_file_path}"
-        )
-
-        ElevationPlotter.plot_comparison(
-            gpx_profile,
-            api_2_profile,
-            title=f"Elevation Profile Comparison, API 2\n{gpx_file_path}"
-        )
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(api_profile.get_distances(), api_profile.get_elevations(), label="API1", color="red")
-        plt.plot(api_2_profile.get_distances(), api_2_profile.get_elevations(), label="API2", color="blue", linestyle="--")
-        plt.show()
-    except Exception:
-        raise
-
-if __name__ == "__main__":
-    import argparse
-
+def main():
     parser = argparse.ArgumentParser(description="Compare GPX Elevation with API")
-    parser.add_argument("gpx1", help='Path to the GPX file')
-    parser.add_argument("--gpx2", help='Path to a second GPX file')
-    parser.add_argument("--mode", default="2d", choices=["2d","3d"],help="What kind of plot?")
+    parser.add_argument("plot_type", choices=["3d", "elevation", "surface"])
+    parser.add_argument("base_gpx", help='Path to primary GPX file')
+    parser.add_argument("--gpx2", help='Path to a comparison GPX file')
+
+    #Elevation specific parameters
+    elevation_group = parser.add_argument_group("Elevation Plot Options")
+    elevation_group.add_argument("--sync-method",
+                                 choices=["elevation_sync", "start_sync", "interpolate_elevations"],
+                                 default="elevation_sync",
+                                 help="Synchronisation Method (default: elevation_sync")
+    elevation_group.add_argument("--use-api", action="store_true", help="Use API instead of comparison file")
+    elevation_group.add_argument("--tolerance", type=float, help="Enable display of specified distance tolerance (km)")
+    elevation_group.add_argument("--tolerance-method", choices=["standard", "kdtree"], default="standard",
+                                 help="Tolerance calculation method")
+
+    #General optional parameters
+    general_group = parser.add_argument_group("General Options")
+    general_group.add_argument("--output", help="Save plot to file instead of displaying")
+    general_group.add_argument("--title", help="Custom title for plot")
 
     args = parser.parse_args()
 
-    if not args.gpx2:
-        print("Simple plot functionality not yet added")
-    else:
-        if args.mode == "2d":
-            plot2d(args)
-        elif args.mode == "3d":
-            plot3d(args)
-        else:
-            print("Invalid options")
+    #validation
+    if args.plot_type == "elevation":
+        if not (args.gpx2 or args.use_api):
+            parser.error("2D plots require --gpx2 OR --use-api")
+        if args.tolerance and not args.gpx2 and not args.use_api:
+            parser.error("Tolerance requires a source of comparison")
+    if args.plot_type == "3d" and not args.gpx2:
+        parser.error("3D plots require --gpx2")
+    if args.tolerance and not args.tolerance_method:
+        parser.error("--tolerance-method required when using tolerance")
 
+    #call corresponding functions in plotter.py
+    if args.plot_type == "3d":
+        plot3d(args)
+    elif args.plot_type == "elevation":
+        plot2d(args)
+    elif args.plot_type == "surface":
+        plot_surface(args)
+
+
+if __name__ == "__main__":
+    main()
 
