@@ -408,3 +408,94 @@ class Track:
             
         except Exception as e:
             raise ValueError(f"Failed to interpolate track: {str(e)}") from e
+
+    @staticmethod
+    def align_track_endpoints(track1: 'Track', track2: 'Track', tolerance_km: float = 0.1) -> tuple['Track', 'Track']:
+        """
+        Aligns two GPX tracks by truncating them so they start and end at approximately the same positions.
+        
+        This function is useful when comparing two recordings of the same route that may have been started
+        or stopped at slightly different points. It finds the best matching start and end points within
+        the specified tolerance and returns truncated versions of both tracks.
+        
+        Args:
+            track1 (Track): First GPX track to align
+            track2 (Track): Second GPX track to align  
+            tolerance_km (float): Maximum distance in kilometers to consider points as matching (default: 0.1km = 100m)
+            
+        Returns:
+            tuple[Track, Track]: Aligned versions of track1 and track2 with matching start/end positions
+            
+        Raises:
+            ValueError: If tracks have insufficient points or no suitable alignment can be found
+        """
+        if len(track1.points) < 2 or len(track2.points) < 2:
+            raise ValueError("Both tracks must have at least 2 points for alignment")
+            
+        # Find best start alignment
+        start1_idx, start2_idx = Track._find_best_start_alignment(track1, track2, tolerance_km)
+        if start1_idx is None or start2_idx is None:
+            raise ValueError(f"Cannot find matching start points within {tolerance_km}km tolerance")
+            
+        # Find best end alignment (working backwards from the end)
+        end1_idx, end2_idx = Track._find_best_end_alignment(track1, track2, tolerance_km)
+        if end1_idx is None or end2_idx is None:
+            raise ValueError(f"Cannot find matching end points within {tolerance_km}km tolerance")
+            
+        # Ensure we have valid ranges after alignment
+        if start1_idx >= end1_idx or start2_idx >= end2_idx:
+            raise ValueError("Alignment would result in empty or invalid track segments")
+            
+        # Create aligned tracks by slicing the point arrays
+        aligned_points1 = track1.points[start1_idx:end1_idx + 1]
+        aligned_points2 = track2.points[start2_idx:end2_idx + 1]
+        
+        return Track(aligned_points1), Track(aligned_points2)
+    
+    @staticmethod
+    def _find_best_start_alignment(track1: 'Track', track2: 'Track', tolerance_km: float) -> tuple[Optional[int], Optional[int]]:
+        """
+        Finds the best starting point alignment between two tracks.
+        
+        Returns:
+            tuple[Optional[int], Optional[int]]: Indices of best matching start points, or (None, None) if no match found
+        """
+        best_distance = float('inf')
+        best_indices = (None, None)
+        
+        # Search within first 20% of each track for start alignment
+        search_limit1 = max(1, len(track1.points) // 5)
+        search_limit2 = max(1, len(track2.points) // 5)
+        
+        for i in range(search_limit1):
+            for j in range(search_limit2):
+                distance = track1.points[i].distance_to(track2.points[j])
+                if distance <= tolerance_km and distance < best_distance:
+                    best_distance = distance
+                    best_indices = (i, j)
+                    
+        return best_indices
+    
+    @staticmethod
+    def _find_best_end_alignment(track1: 'Track', track2: 'Track', tolerance_km: float) -> tuple[Optional[int], Optional[int]]:
+        """
+        Finds the best ending point alignment between two tracks.
+        
+        Returns:
+            tuple[Optional[int], Optional[int]]: Indices of best matching end points, or (None, None) if no match found
+        """
+        best_distance = float('inf')
+        best_indices = (None, None)
+        
+        # Search within last 20% of each track for end alignment
+        search_start1 = len(track1.points) - max(1, len(track1.points) // 5)
+        search_start2 = len(track2.points) - max(1, len(track2.points) // 5)
+        
+        for i in range(search_start1, len(track1.points)):
+            for j in range(search_start2, len(track2.points)):
+                distance = track1.points[i].distance_to(track2.points[j])
+                if distance <= tolerance_km and distance < best_distance:
+                    best_distance = distance
+                    best_indices = (i, j)
+                    
+        return best_indices
