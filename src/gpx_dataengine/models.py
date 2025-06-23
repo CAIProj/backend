@@ -342,50 +342,50 @@ class Track:
         return [p.elevation for p in self.points]
 
     @staticmethod
-    def interpolate_to_match_points(reference_track: 'Track', target_track: 'Track') -> 'Track':
+    def interpolate_to_match_points(full_route: 'Track', subset_route: 'Track') -> 'Track':
         """
-        Interpolates the reference track to have the same number of points as the target track.
+        Interpolates the first recording (full route) to match the number of points in the second recording (subset).
         
-        This function is useful when comparing two GPX recordings where one is a subset of the other.
-        It interpolates the latitude, longitude, and elevation of the reference track to create
-        a new track with the same number of points as the target track, enabling direct comparison.
+        This function is useful when comparing two GPX recordings where the second recording is a subset 
+        of the first recording. It interpolates the latitude, longitude, and elevation of the full route
+        to create a new track with the same number of points as the subset, enabling direct comparison.
         
         Args:
-            reference_track (Track): The track to be interpolated (typically the longer route)
-            target_track (Track): The track that provides the target number of points
+            full_route (Track): The complete route recording to be interpolated
+            subset_route (Track): The subset recording that determines the target number of points
             
         Returns:
-            Track: A new Track instance with interpolated points matching the target count
+            Track: A new Track instance with the full route interpolated to match the subset's point count
             
         Raises:
             ValueError: If either track has fewer than 2 points or if interpolation fails
         """
-        if len(reference_track.points) < 2:
-            raise ValueError("Reference track must have at least 2 points for interpolation")
-        if len(target_track.points) < 2:
-            raise ValueError("Target track must have at least 2 points")
+        if len(full_route.points) < 2:
+            raise ValueError("Full route must have at least 2 points for interpolation")
+        if len(subset_route.points) < 2:
+            raise ValueError("Subset route must have at least 2 points")
             
-        # Calculate cumulative distances for the reference track
-        ref_distances = reference_track.elevation_profile.get_distances()
-        ref_lats = reference_track.get_latitudes()
-        ref_lons = reference_track.get_longitudes()
-        ref_elevations = reference_track.get_elevations()
+        # Calculate cumulative distances for the full route
+        full_distances = full_route.elevation_profile.get_distances()
+        full_lats = full_route.get_latitudes()
+        full_lons = full_route.get_longitudes()
+        full_elevations = full_route.get_elevations()
         
         # Handle None elevations by replacing with 0 for interpolation
-        ref_elevations_clean = [elev if elev is not None else 0.0 for elev in ref_elevations]
+        full_elevations_clean = [elev if elev is not None else 0.0 for elev in full_elevations]
         
-        # Calculate target distances based on the target track length
-        target_count = len(target_track.points)
-        total_distance = ref_distances[-1]
+        # Calculate target distances based on the subset track length
+        target_count = len(subset_route.points)
+        total_distance = full_distances[-1]
         
         # Create evenly spaced distance values for interpolation
         target_distances = np.linspace(0, total_distance, target_count)
         
         try:
             # Create interpolation functions for each coordinate
-            lat_interp = interp1d(ref_distances, ref_lats, kind='linear', bounds_error=False, fill_value='extrapolate')
-            lon_interp = interp1d(ref_distances, ref_lons, kind='linear', bounds_error=False, fill_value='extrapolate')
-            elev_interp = interp1d(ref_distances, ref_elevations_clean, kind='linear', bounds_error=False, fill_value='extrapolate')
+            lat_interp = interp1d(full_distances, full_lats, kind='linear', bounds_error=False, fill_value='extrapolate')
+            lon_interp = interp1d(full_distances, full_lons, kind='linear', bounds_error=False, fill_value='extrapolate')
+            elev_interp = interp1d(full_distances, full_elevations_clean, kind='linear', bounds_error=False, fill_value='extrapolate')
             
             # Interpolate coordinates at target distances
             interpolated_lats = lat_interp(target_distances)
@@ -395,8 +395,8 @@ class Track:
             # Create interpolated points
             interpolated_points = []
             for i in range(target_count):
-                # Restore None elevations if original reference had None values
-                elevation = float(interpolated_elevs[i]) if any(e is not None for e in ref_elevations) else None
+                # Restore None elevations if original full route had None values
+                elevation = float(interpolated_elevs[i]) if any(e is not None for e in full_elevations) else None
                 point = Point(
                     latitude=float(interpolated_lats[i]),
                     longitude=float(interpolated_lons[i]),
