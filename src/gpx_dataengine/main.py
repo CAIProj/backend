@@ -49,10 +49,10 @@ def main():
             gpx_profile_1 = Track.from_gpx_file(file1).elevation_profile
             gpx_profile_2 = Track.from_gpx_file(file2).elevation_profile
 
-            p1 = Plotter(
+            p1 = Plotter([
                 gpx_profile_1,
                 gpx_profile_2,
-            )
+            ])
             #if a custom title is passed from the command line, then it is passed to the plotter
             if args.title:
                 p1.plot_3d_lat_lon_elevation(title=args.title)

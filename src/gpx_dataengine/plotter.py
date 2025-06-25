@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 import scipy.spatial
 import numpy as np
 from scipy.interpolate import interp1d
-from elevationprofile import ElevationProfile, GeoCalculator
-from gpxdata import GPXParser, Point
-from elevationapi import OpenElevationAPI
+from models import ElevationProfile, Point, Track
+from elevation_api import OpenElevationAPI
 from typing import Optional, List, Union, Tuple, Dict
 import bisect
 
@@ -170,10 +169,7 @@ class Plotter:
         ax.set_zlabel(zlabel)
         ax.legend()
         plt.tight_layout()
-        if output:
-            plt.savefig(output)
-        else:
-            plt.show()
+        plt.show()
 
 
 class ElevationPlotter:
@@ -316,7 +312,7 @@ class ElevationPlotter:
                     best_j = j
                     best_diff = diff
 
-            if GeoCalculator.haversine_distance(profile1.points[best_j], profile2.points[i]) <= tolerance:
+            if Point.haversine_distance(profile1.points[best_j], profile2.points[i]) <= tolerance:
                 tolerance_vector[i] = True
 
         return tolerance_vector
@@ -363,10 +359,10 @@ class ElevationPlotter:
 
     @staticmethod
     def elevation_sync(
-            gpx1: list[Point],
-            gpx2: list[Point],
-            tolerance: float = 0.1,
-            tolerance_method: str = "standard"
+        gpx1: list[Point],
+        gpx2: list[Point],
+        tolerance: float = 0.1,
+        tolerance_method: str = "standard"
     ):
         """
         This is a synchronisation method to shift the comparison plot to a position where the elevation plots best match
@@ -664,7 +660,7 @@ def plot_surface(args):
     :return:
     """
     gpx1 = args.base_gpx
-    gpx1_points = GPXParser.parse_gpx_file(gpx1)
+    gpx1_points = Track.from_gpx_file(gpx1).points
 
     try:
         output = args.output if args.output else None
@@ -674,7 +670,7 @@ def plot_surface(args):
                 gpx2_points = OpenElevationAPI.get_elevations(gpx2_points)
             else:
                 gpx_file_2 = args.gpx2
-                gpx2_points = GPXParser.parse_gpx_file(gpx_file_2)
+                gpx2_points = Track.from_gpx_file(gpx_file_2).points
             if args.title:
                 SurfacePlot.plot_comparison(gpx1_points, gpx2_points, title=args.title, output=output)
             else:
