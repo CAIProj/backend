@@ -4,6 +4,10 @@ import gpxpy
 from dataclasses import dataclass
 import math
 from typing import Optional, ClassVar
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+geoid_file = 'egm2008-5.pgm'
 
 @dataclass
 class Point:
@@ -321,7 +325,7 @@ class Track:
             raise ValueError(f"Failed to parse GPX content from: {gpx_file_path}") from e
 
         points: list[Point] = []
-        geoid = GeoidKarney("egm2008-5.pgm")
+        geoid = GeoidKarney(os.path.join(script_dir, geoid_file))
         for tr in gpx.tracks:
             for seg in tr.segments:
                 for pt in seg.points:
