@@ -1,5 +1,7 @@
-# folder of virtual environment
+# Folder of virtual environment
 *venv*
 
 # Auto-generated folders
 __pycache__
+.vscode/
+.idea/
