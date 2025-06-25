@@ -4,7 +4,7 @@ from scipy.interpolate import griddata
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from models import ElevationProfile, Track
-from elevation_api import OpenElevationAPI, ElevationAPI
+from elevation_api import OpenElevationAPI, OpenStreetMapElevationAPI
 
 
 # Standalone comparison plot using both APIs
@@ -16,7 +16,7 @@ def compare_elevation_apis(gpx_file_path: str):
 
         # Get elevations from both apis
         elevations_from_openelevation = OpenElevationAPI.get_elevations(track.points)
-        elevations_from_openstreetmap = ElevationAPI.get_elevations(track.points)
+        elevations_from_openstreetmap = OpenStreetMapElevationAPI.get_elevations(track.points)
 
         # Create profiles for api elevations
         openelevation_elevation_profile = track.elevation_profile.copy()
