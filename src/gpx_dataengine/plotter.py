@@ -516,29 +516,32 @@ def plot2d(args):
     :return:
     """
     gpx_file_1 = args.base_gpx
-    gpx_points_1 = GPXParser.parse_gpx_file(gpx_file_1)
+    track_1 = Track.from_gpx_file(gpx_file_1)
 
     try:
         # create a comparison track from API data if "use-api" option is passed
         if args.use_api:
-            gpx_points_2 = [Point(p.latitude, p.longitude) for p in gpx_points_1]
-            gpx_points_2 = OpenElevationAPI.get_elevations(gpx_points_2)
+            api_elevations = OpenElevationAPI.get_elevations(track_1.points)
+
+            # Set the api elevations in the new track_2 variable
+            track_2 = track_1.copy()
+            track_2.set_elevations(api_elevations)
         else:
             gpx_file_2 = args.gpx2
-            gpx_points_2 = GPXParser.parse_gpx_file(gpx_file_2)
+            track_2 = Track.from_gpx_file(gpx_file_2)
 
         output = args.output if args.output else None
 
         if args.tolerance: #tolerance is optional so plotter arguments will differ based on if it is enabled or not
             if args.sync_method == "elevation_sync":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.elevation_sync(gpx_points_1, gpx_points_2,
+                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.elevation_sync(track_1.points, track_2.points,
                                                                                                  args.tolerance, args.tolerance_method)
             elif args.sync_method == "start_sync":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.start_sync(gpx_points_1, gpx_points_2,
+                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.start_sync(track_1.points, track_2.points,
                                                                                              args.tolerance, args.tolerance_method)
             elif args.sync_method == "interpolate_elevations":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.interpolate_elevations(gpx_points_1,
-                                                                                                         gpx_points_2,
+                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.interpolate_elevations(track_1.points,
+                                                                                                         track_2.points,
                                                                                                          args.tolerance,
                                                                                                          args.tolerance_method)
             else:
@@ -550,11 +553,11 @@ def plot2d(args):
                 ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2, tolerance_vector=tolerance_vector, output=output)
         else:
             if args.sync_method == "elevation_sync":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.elevation_sync(gpx_points_1, gpx_points_2)
+                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.elevation_sync(track_1.points, track_2.points)
             elif args.sync_method == "start_sync":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.start_sync(gpx_points_1, gpx_points_2)
+                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.start_sync(track_1.points, track_2.points)
             elif args.sync_method == "interpolate_elevations":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.interpolate_elevations(gpx_points_1, gpx_points_2)
+                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.interpolate_elevations(track_1.points, track_2.points)
             else:
                 raise
             if args.title:
