@@ -198,6 +198,25 @@ class ElevationProfile:
         """
         new_points = [p.copy() for p in self.points]
         return ElevationProfile(new_points)
+    
+    def set_distances(self, distances: list[float]) -> None:
+        """
+        Update the cumulative distances of the profile.
+
+        This method allows overriding the automatically calculated distances,
+        which can be useful for customized visualizations or comparisons.
+
+        Args:
+            distances (list[float]): New cumulative distances (in kilometers) corresponding to each point.
+
+        Raises:
+            ValueError: If the length of distances does not match the number of points in this profile.
+        """
+        if len(self.distances) == len(distances):
+            for i, distance in enumerate(distances):
+                self.distances[i] = distance
+        else:
+            raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
 
 
 class Track:
@@ -338,3 +357,32 @@ class Track:
             list[Optional[float]]: Elevations of the points in the track.
         """
         return [p.elevation for p in self.points]
+    
+    def set_elevations(self, elevations: list[float]) -> None:
+        """
+        Update the elevation values of all track points.
+
+        Args:
+            elevations (list[float]): New elevation values in the same order and length as the track points.
+
+        Raises:
+            ValueError: If the length of elevations does not match the number of points in the track.
+        """
+        if len(self.points) != len(elevations):
+            raise ValueError("Length of the provided elevations must match the number of points in the Track")
+
+        for i, elevation in enumerate(elevations):
+            self._points[i].elevation = elevation
+
+        if self._elevation_profile is not None:
+            self._elevation_profile.set_elevations(elevations)
+    
+    def copy(self) -> "Track":
+        """
+        Create a deep copy of this Track, including all Points.
+
+        Returns:
+            Track: A new Track instance with duplicated Points.
+        """
+        copied_points = [p.copy() for p in self.points]
+        return Track(copied_points)
