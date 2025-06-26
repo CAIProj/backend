@@ -1,48 +1,52 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.interpolate import griddata
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
-from models import ElevationProfile, Track
+import argparse
+from models import Track
 from elevation_api import OpenElevationAPI, OpenStreetMapElevationAPI
 
+def compare_elevation_apis(gpx_file_path: str, use_openelevation: bool, use_openstreetmap: bool):
+    """
+    Compare elevation profiles from the GPX file and selected elevation APIs.
 
-# Standalone comparison plot using both APIs
-def compare_elevation_apis(gpx_file_path: str):
+    Args:
+        gpx_file_path (str): Path to the GPX file.
+        use_openelevation (bool): Whether to include data from OpenElevation API.
+        use_openstreetmap (bool): Whether to include data from OpenStreetMap API.
+    """
     from plotter import Plotter  # Delayed import to avoid circular dependency with plotter.py
 
     try:
         track = Track.from_gpx_file(gpx_file_path)
+        profiles_to_plot = [(track.elevation_profile, "From GPX file")]
 
-        # get track with api elevations
-        openelevation_elevation_track = track.with_api_elevations(OpenElevationAPI)
-        openstreetmap_elevation_track = track.with_api_elevations(OpenStreetMapElevationAPI)
+        if use_openelevation:
+            oe_track = track.with_api_elevations(OpenElevationAPI)
+            profiles_to_plot.append((oe_track.elevation_profile, "From OpenElevation API"))
 
+        if use_openstreetmap:
+            osm_track = track.with_api_elevations(OpenStreetMapElevationAPI)
+            profiles_to_plot.append((osm_track.elevation_profile, "From OpenStreetMap API"))
 
-        # Plot comparision plots
-        plotter1 = Plotter()
-        plotter1.add_profiles(
-            (track.elevation_profile, 'From GPX file'),
-            (openelevation_elevation_track.elevation_profile, 'From Openelevation API'),
-        )
-        plotter1.plot_distance_vs_elevation()
-        
-        plotter2 = Plotter()
-        plotter2.add_profiles(
-            (track.elevation_profile, 'From GPX file'),
-            (openstreetmap_elevation_track.elevation_profile, 'From Openstreetmap API') 
-        )
-        plotter2.plot_distance_vs_elevation()
-        
+        plotter = Plotter()
+        plotter.add_profiles(*profiles_to_plot)
+        plotter.plot_distance_vs_elevation()
+
     except Exception as e:
         print(f"An error occurred during comparison: {e}")
         raise
     
 if __name__ == "__main__":
-    import argparse
+    parser = argparse.ArgumentParser(description="Compare elevation data from a GPX file and selected APIs")
+    parser.add_argument("gpx_file", help="Path to the GPX file")
+    parser.add_argument("--openelevation", action="store_true", help="Include elevation data from OpenElevation API")
+    parser.add_argument("--openstreetmap", action="store_true", help="Include elevation data from OpenStreetMap API")
 
-    parser = argparse.ArgumentParser(description="Compare elevation data from multiple APIs")
-    parser.add_argument("gpx_file", help="Path to the GPX file to compare elevations")
     args = parser.parse_args()
 
-    compare_elevation_apis(args.gpx_file)
+    # If no API flags are set, include both by default
+    if not args.openelevation and not args.openstreetmap:
+        args.openelevation = args.openstreetmap = True
+
+    compare_elevation_apis(
+        gpx_file_path=args.gpx_file,
+        use_openelevation=args.openelevation,
+        use_openstreetmap=args.openstreetmap
+    )
