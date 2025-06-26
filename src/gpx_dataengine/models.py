@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import math
 from typing import Optional, ClassVar
 import os
+# BaseEelevationAPI is used as string annotation when needed not imported - to avoid circular import issues. 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 geoid_file = 'egm2008-5.pgm'
@@ -221,6 +222,29 @@ class ElevationProfile:
                 self.distances[i] = distance
         else:
             raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
+    
+    def with_api_elevations(self, api_cls: type["BaseElevationAPI"]) -> "ElevationProfile":
+        """
+        Return a new ElevationProfile with elevations fetched from the specified API.
+
+        Args:
+            api_cls (type[BaseElevationAPI]): Elevation API class to fetch elevation data.
+
+        Returns:
+            ElevationProfile: A new profile with updated elevation values.
+
+        Raises:
+            ValueError: If the number of elevations returned by the API does not match the number of points.
+        """
+        elevations = api_cls.get_elevations(self.points)
+        
+        if len(elevations) != len(self.points):
+            raise ValueError("Elevation API returned a mismatched number of elevations.")
+
+        new_profile = self.copy()
+        new_profile.set_elevations(elevations)
+        return new_profile
+
 
 
 class Track:
@@ -390,3 +414,25 @@ class Track:
         """
         copied_points = [p.copy() for p in self.points]
         return Track(copied_points)
+    
+    def with_api_elevations(self, api_cls: type["BaseElevationAPI"]) -> "Track":
+        """
+        Return a new Track instance with elevations fetched from the given API class.
+
+        Args:
+            api_cls (type[BaseElevationAPI]): The elevation API class to use.
+
+        Returns:
+            Track: A new Track with updated elevation data.
+
+        Raises:
+            ValueError: If the number of elevations returned does not match the number of points.
+        """
+        elevations = api_cls.get_elevations(self.points)
+        
+        if len(elevations) != len(self.points):
+            raise ValueError("Elevation API returned a mismatched number of elevations.")
+
+        new_track = self.copy()
+        new_track.set_elevations(elevations)
+        return new_track
