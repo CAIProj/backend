@@ -1,17 +1,15 @@
+from abc import ABC, abstractmethod
 from models import Point
 import requests
 import json
-import matplotlib.pyplot as plt
-from models import ElevationProfile, Track
 
 
-class ElevationAPI:
-    API_URL = "https://valhalla1.openstreetmap.de/height"
-
+class BaseElevationAPI(ABC):
     @classmethod
+    @abstractmethod
     def get_elevations(cls, points: list[Point]) -> list[float]:
         """
-        Returns a list of elevations for the given Points, in the same order.
+        Return a list of elevations for the given Points, in the same order.
 
         Args:
             points (list[Point]): List of Points representing geographical locations.
@@ -19,6 +17,13 @@ class ElevationAPI:
         Returns:
             list[float]: Elevations of the Points (in input order) if the API request is successful; otherwise, an empty list.
         """
+        pass
+
+class OpenStreetMapElevationAPI(BaseElevationAPI):
+    API_URL = "https://valhalla1.openstreetmap.de/height"
+
+    @classmethod
+    def get_elevations(cls, points: list[Point]) -> list[float]:
         if not points:
             return []
 
@@ -39,20 +44,11 @@ class ElevationAPI:
             return []
 
 
-class OpenElevationAPI:
+class OpenElevationAPI(BaseElevationAPI):
     API_URL = "https://api.open-elevation.com/api/v1/lookup"
 
     @classmethod
     def get_elevations(cls, points: list[Point]) -> list[float]:
-        """
-        Returns a list of elevations for the given Point objects, in the same order.
-
-        Args:
-            points (list[Point]): List of Point objects representing geographical locations.
-
-        Returns:
-            list[float]: Elevations of the Point objects (in input order) if the API request is successful; otherwise, an empty list.
-        """
         if not points:
             return []
 

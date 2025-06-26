@@ -4,8 +4,11 @@ import gpxpy
 from dataclasses import dataclass
 import math
 from typing import Optional, ClassVar
-import numpy as np
-from scipy.interpolate import interp1d
+import os
+# BaseEelevationAPI is used as string annotation when needed not imported - to avoid circular import issues. 
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+geoid_file = 'egm2008-5.pgm'
 
 @dataclass
 class Point:
@@ -200,6 +203,48 @@ class ElevationProfile:
         """
         new_points = [p.copy() for p in self.points]
         return ElevationProfile(new_points)
+    
+    def set_distances(self, distances: list[float]) -> None:
+        """
+        Update the cumulative distances of the profile.
+
+        This method allows overriding the automatically calculated distances,
+        which can be useful for customized visualizations or comparisons.
+
+        Args:
+            distances (list[float]): New cumulative distances (in kilometers) corresponding to each point.
+
+        Raises:
+            ValueError: If the length of distances does not match the number of points in this profile.
+        """
+        if len(self.distances) == len(distances):
+            for i, distance in enumerate(distances):
+                self.distances[i] = distance
+        else:
+            raise ValueError('Length of the provided distances should be the same as the number of points in the Elevation Profile')
+    
+    def with_api_elevations(self, api_cls: type["BaseElevationAPI"]) -> "ElevationProfile":
+        """
+        Return a new ElevationProfile with elevations fetched from the specified API.
+
+        Args:
+            api_cls (type[BaseElevationAPI]): Elevation API class to fetch elevation data.
+
+        Returns:
+            ElevationProfile: A new profile with updated elevation values.
+
+        Raises:
+            ValueError: If the number of elevations returned by the API does not match the number of points.
+        """
+        elevations = api_cls.get_elevations(self.points)
+        
+        if len(elevations) != len(self.points):
+            raise ValueError("Elevation API returned a mismatched number of elevations.")
+
+        new_profile = self.copy()
+        new_profile.set_elevations(elevations)
+        return new_profile
+
 
 
 class Track:
@@ -304,7 +349,7 @@ class Track:
             raise ValueError(f"Failed to parse GPX content from: {gpx_file_path}") from e
 
         points: list[Point] = []
-        geoid = GeoidKarney("egm2008-5.pgm")
+        geoid = GeoidKarney(os.path.join(script_dir, geoid_file))
         for tr in gpx.tracks:
             for seg in tr.segments:
                 for pt in seg.points:
@@ -340,162 +385,54 @@ class Track:
             list[Optional[float]]: Elevations of the points in the track.
         """
         return [p.elevation for p in self.points]
-
-    @staticmethod
-    def interpolate_to_match_points(full_route: 'Track', subset_route: 'Track') -> 'Track':
-        """
-        Interpolates the first recording (full route) to match the number of points in the second recording (subset).
-        
-        This function is useful when comparing two GPX recordings where the second recording is a subset 
-        of the first recording. It interpolates the latitude, longitude, and elevation of the full route
-        to create a new track with the same number of points as the subset, enabling direct comparison.
-        
-        Args:
-            full_route (Track): The complete route recording to be interpolated
-            subset_route (Track): The subset recording that determines the target number of points
-            
-        Returns:
-            Track: A new Track instance with the full route interpolated to match the subset's point count
-            
-        Raises:
-            ValueError: If either track has fewer than 2 points or if interpolation fails
-        """
-        if len(full_route.points) < 2:
-            raise ValueError("Full route must have at least 2 points for interpolation")
-        if len(subset_route.points) < 2:
-            raise ValueError("Subset route must have at least 2 points")
-            
-        # Calculate cumulative distances for the full route
-        full_distances = full_route.elevation_profile.get_distances()
-        full_lats = full_route.get_latitudes()
-        full_lons = full_route.get_longitudes()
-        full_elevations = full_route.get_elevations()
-        
-        # Handle None elevations by replacing with 0 for interpolation
-        full_elevations_clean = [elev if elev is not None else 0.0 for elev in full_elevations]
-        
-        # Calculate target distances based on the subset track length
-        target_count = len(subset_route.points)
-        total_distance = full_distances[-1]
-        
-        # Create evenly spaced distance values for interpolation
-        target_distances = np.linspace(0, total_distance, target_count)
-        
-        try:
-            # Create interpolation functions for each coordinate
-            lat_interp = interp1d(full_distances, full_lats, kind='linear', bounds_error=False, fill_value='extrapolate')
-            lon_interp = interp1d(full_distances, full_lons, kind='linear', bounds_error=False, fill_value='extrapolate')
-            elev_interp = interp1d(full_distances, full_elevations_clean, kind='linear', bounds_error=False, fill_value='extrapolate')
-            
-            # Interpolate coordinates at target distances
-            interpolated_lats = lat_interp(target_distances)
-            interpolated_lons = lon_interp(target_distances)
-            interpolated_elevs = elev_interp(target_distances)
-            
-            # Create interpolated points
-            interpolated_points = []
-            for i in range(target_count):
-                # Restore None elevations if original full route had None values
-                elevation = float(interpolated_elevs[i]) if any(e is not None for e in full_elevations) else None
-                point = Point(
-                    latitude=float(interpolated_lats[i]),
-                    longitude=float(interpolated_lons[i]),
-                    elevation=elevation
-                )
-                interpolated_points.append(point)
-                
-            return Track(interpolated_points)
-            
-        except Exception as e:
-            raise ValueError(f"Failed to interpolate track: {str(e)}") from e
-
-    @staticmethod
-    def align_track_endpoints(track1: 'Track', track2: 'Track', tolerance_km: float = 0.1) -> tuple['Track', 'Track']:
-        """
-        Aligns two GPX tracks by truncating them so they start and end at approximately the same positions.
-        
-        This function is useful when comparing two recordings of the same route that may have been started
-        or stopped at slightly different points. It finds the best matching start and end points within
-        the specified tolerance and returns truncated versions of both tracks.
-        
-        Args:
-            track1 (Track): First GPX track to align
-            track2 (Track): Second GPX track to align  
-            tolerance_km (float): Maximum distance in kilometers to consider points as matching (default: 0.1km = 100m)
-            
-        Returns:
-            tuple[Track, Track]: Aligned versions of track1 and track2 with matching start/end positions
-            
-        Raises:
-            ValueError: If tracks have insufficient points or no suitable alignment can be found
-        """
-        if len(track1.points) < 2 or len(track2.points) < 2:
-            raise ValueError("Both tracks must have at least 2 points for alignment")
-            
-        # Find best start alignment
-        start1_idx, start2_idx = Track._find_best_start_alignment(track1, track2, tolerance_km)
-        if start1_idx is None or start2_idx is None:
-            raise ValueError(f"Cannot find matching start points within {tolerance_km}km tolerance")
-            
-        # Find best end alignment (working backwards from the end)
-        end1_idx, end2_idx = Track._find_best_end_alignment(track1, track2, tolerance_km)
-        if end1_idx is None or end2_idx is None:
-            raise ValueError(f"Cannot find matching end points within {tolerance_km}km tolerance")
-            
-        # Ensure we have valid ranges after alignment
-        if start1_idx >= end1_idx or start2_idx >= end2_idx:
-            raise ValueError("Alignment would result in empty or invalid track segments")
-            
-        # Create aligned tracks by slicing the point arrays
-        aligned_points1 = track1.points[start1_idx:end1_idx + 1]
-        aligned_points2 = track2.points[start2_idx:end2_idx + 1]
-        
-        return Track(aligned_points1), Track(aligned_points2)
     
-    @staticmethod
-    def _find_best_start_alignment(track1: 'Track', track2: 'Track', tolerance_km: float) -> tuple[Optional[int], Optional[int]]:
+    def set_elevations(self, elevations: list[float]) -> None:
         """
-        Finds the best starting point alignment between two tracks.
-        
-        Returns:
-            tuple[Optional[int], Optional[int]]: Indices of best matching start points, or (None, None) if no match found
+        Update the elevation values of all track points.
+
+        Args:
+            elevations (list[float]): New elevation values in the same order and length as the track points.
+
+        Raises:
+            ValueError: If the length of elevations does not match the number of points in the track.
         """
-        best_distance = float('inf')
-        best_indices = (None, None)
-        
-        # Search within first 20% of each track for start alignment
-        search_limit1 = max(1, len(track1.points) // 5)
-        search_limit2 = max(1, len(track2.points) // 5)
-        
-        for i in range(search_limit1):
-            for j in range(search_limit2):
-                distance = track1.points[i].distance_to(track2.points[j])
-                if distance <= tolerance_km and distance < best_distance:
-                    best_distance = distance
-                    best_indices = (i, j)
-                    
-        return best_indices
+        if len(self.points) != len(elevations):
+            raise ValueError("Length of the provided elevations must match the number of points in the Track")
+
+        for i, elevation in enumerate(elevations):
+            self._points[i].elevation = elevation
+
+        if self._elevation_profile is not None:
+            self._elevation_profile.set_elevations(elevations)
     
-    @staticmethod
-    def _find_best_end_alignment(track1: 'Track', track2: 'Track', tolerance_km: float) -> tuple[Optional[int], Optional[int]]:
+    def copy(self) -> "Track":
         """
-        Finds the best ending point alignment between two tracks.
-        
+        Create a deep copy of this Track, including all Points.
+
         Returns:
-            tuple[Optional[int], Optional[int]]: Indices of best matching end points, or (None, None) if no match found
+            Track: A new Track instance with duplicated Points.
         """
-        best_distance = float('inf')
-        best_indices = (None, None)
+        copied_points = [p.copy() for p in self.points]
+        return Track(copied_points)
+    
+    def with_api_elevations(self, api_cls: type["BaseElevationAPI"]) -> "Track":
+        """
+        Return a new Track instance with elevations fetched from the given API class.
+
+        Args:
+            api_cls (type[BaseElevationAPI]): The elevation API class to use.
+
+        Returns:
+            Track: A new Track with updated elevation data.
+
+        Raises:
+            ValueError: If the number of elevations returned does not match the number of points.
+        """
+        elevations = api_cls.get_elevations(self.points)
         
-        # Search within last 20% of each track for end alignment
-        search_start1 = len(track1.points) - max(1, len(track1.points) // 5)
-        search_start2 = len(track2.points) - max(1, len(track2.points) // 5)
-        
-        for i in range(search_start1, len(track1.points)):
-            for j in range(search_start2, len(track2.points)):
-                distance = track1.points[i].distance_to(track2.points[j])
-                if distance <= tolerance_km and distance < best_distance:
-                    best_distance = distance
-                    best_indices = (i, j)
-                    
-        return best_indices
+        if len(elevations) != len(self.points):
+            raise ValueError("Elevation API returned a mismatched number of elevations.")
+
+        new_track = self.copy()
+        new_track.set_elevations(elevations)
+        return new_track
