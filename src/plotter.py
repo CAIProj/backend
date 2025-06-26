@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import scipy.spatial
 import numpy as np
 from scipy.interpolate import interp1d
-from models import ElevationProfile, Point, Track
-from elevation_api import OpenElevationAPI
+from .models import ElevationProfile, Point, Track
+from .elevation_api import OpenElevationAPI
 from typing import Optional, List, Union, Tuple, Dict
 import bisect
 

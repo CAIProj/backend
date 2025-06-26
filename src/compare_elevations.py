@@ -1,6 +1,6 @@
 import argparse
-from models import Track
-from elevation_api import OpenElevationAPI, OpenStreetMapElevationAPI
+from .models import Track
+from .elevation_api import OpenElevationAPI, OpenStreetMapElevationAPI
 
 def compare_elevation_apis(gpx_file_path: str, use_openelevation: bool, use_openstreetmap: bool):
     """
