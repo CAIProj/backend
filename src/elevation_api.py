@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from models import Point
+from .models import Point
 import requests
 import json
 

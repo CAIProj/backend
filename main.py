@@ -1,5 +1,5 @@
-from plotter import Plotter, plot2d, plot_surface
-from models import Track
+from src.plotter import Plotter, plot2d, plot_surface
+from src.models import Track
 import argparse
 
 def main():
