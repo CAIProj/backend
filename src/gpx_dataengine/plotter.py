@@ -521,11 +521,8 @@ def plot2d(args):
     try:
         # create a comparison track from API data if "use-api" option is passed
         if args.use_api:
-            api_elevations = OpenElevationAPI.get_elevations(track_1.points)
-
-            # Set the api elevations in the new track_2 variable
-            track_2 = track_1.copy()
-            track_2.set_elevations(api_elevations)
+            # Create track_2 from track_1 but elevations from OpenElevationAPI
+            track_2 = track_1.with_api_elevations(OpenElevationAPI)
         else:
             gpx_file_2 = args.gpx2
             track_2 = Track.from_gpx_file(gpx_file_2)
