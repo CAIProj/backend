@@ -3,7 +3,7 @@ import scipy.spatial
 import numpy as np
 from scipy.interpolate import interp1d
 from .models import ElevationProfile, Point, Track
-from .elevation_api import OpenStreetMapElevationAPI
+from .elevation_api import OpenStreetMapElevationAPI, OpenElevationAPI
 from typing import Optional, List, Union, Tuple, Dict
 import bisect
 
@@ -511,59 +511,52 @@ class ElevationPlotter:
 
 def plot2d(args):
     """
-    This method is called from main.py if a 2d elevation plot is desired
-    :param args: arguments passed from the command line
-    :return:
+    This method is called from main.py if a 2D elevation plot is desired.
+
+    Args:
+        args: Arguments passed from the command line.
     """
-    gpx_file_1 = args.base_gpx
-    track_1 = Track.from_gpx_file(gpx_file_1)
+    track_1 = Track.from_gpx_file(args.base_gpx)
+    output = args.output or None
 
-    try:
-        # create a comparison track from API data if "use-api" option is passed
-        if args.use_api:
-            # Create track_2 from track_1 but elevations from OpenStreetMapElevationAPI
-            track_2 = track_1.with_api_elevations(OpenStreetMapElevationAPI)
-        else:
-            gpx_file_2 = args.gpx2
-            track_2 = Track.from_gpx_file(gpx_file_2)
+    # Load second track
+    if args.use_api:
+        track_2 = track_1.with_api_elevations(OpenStreetMapElevationAPI)
+    else:
+        track_2 = Track.from_gpx_file(args.gpx2)
 
-        output = args.output if args.output else None
+    # Choose sync method
+    sync_methods = {
+        "elevation_sync": ElevationPlotter.elevation_sync,
+        "start_sync": ElevationPlotter.start_sync,
+        "interpolate_elevations": ElevationPlotter.interpolate_elevations
+    }
 
-        if args.tolerance: #tolerance is optional so plotter arguments will differ based on if it is enabled or not
-            if args.sync_method == "elevation_sync":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.elevation_sync(track_1.points, track_2.points,
-                                                                                                 args.tolerance, args.tolerance_method)
-            elif args.sync_method == "start_sync":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.start_sync(track_1.points, track_2.points,
-                                                                                             args.tolerance, args.tolerance_method)
-            elif args.sync_method == "interpolate_elevations":
-                gpx_profile_1, gpx_profile_2, tolerance_vector = ElevationPlotter.interpolate_elevations(track_1.points,
-                                                                                                         track_2.points,
-                                                                                                         args.tolerance,
-                                                                                                         args.tolerance_method)
-            else:
-                raise
-            if args.title:
-                ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2, tolerance_vector=tolerance_vector,
-                                                 title=args.title, output=output)
-            else:
-                ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2, tolerance_vector=tolerance_vector, output=output)
-        else:
-            if args.sync_method == "elevation_sync":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.elevation_sync(track_1.points, track_2.points)
-            elif args.sync_method == "start_sync":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.start_sync(track_1.points, track_2.points)
-            elif args.sync_method == "interpolate_elevations":
-                gpx_profile_1, gpx_profile_2, _ = ElevationPlotter.interpolate_elevations(track_1.points, track_2.points)
-            else:
-                raise
-            if args.title:
-                ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2, title=args.title, output=output)
-            else:
-                ElevationPlotter.plot_comparison(gpx_profile_1, gpx_profile_2, output=output)
+    if args.sync_method not in sync_methods:
+        raise ValueError(f"Unsupported sync method: {args.sync_method}")
 
-    except:
-        raise
+    sync_fn = sync_methods[args.sync_method]
+
+    # Run synchronization
+    if args.tolerance:
+        gpx_profile_1, gpx_profile_2, tolerance_vector = sync_fn(
+            track_1.points, track_2.points, args.tolerance, args.tolerance_method
+        )
+    else:
+        gpx_profile_1, gpx_profile_2, _ = sync_fn(track_1.points, track_2.points)
+        tolerance_vector = None
+
+    # Plot result
+    plot_kwargs = {
+        "profile1": gpx_profile_1,
+        "profile2": gpx_profile_2,
+        "tolerance_vector": tolerance_vector,
+        "output": output
+    }
+    if args.title:
+        plot_kwargs["title"] = args.title
+
+    ElevationPlotter.plot_comparison(**plot_kwargs)
 
 class SurfacePlot:
     """
