@@ -3,7 +3,7 @@ from pygeodesy.ellipsoidalKarney import LatLon
 import gpxpy
 from dataclasses import dataclass
 import math
-from typing import Optional, ClassVar
+from typing import Optional, ClassVar, Literal
 import os
 import numpy as np
 from scipy.interpolate import interp1d
@@ -246,6 +246,66 @@ class ElevationProfile:
         new_profile = self.copy()
         new_profile.set_elevations(elevations)
         return new_profile
+    
+    def with_smoothed_elevations(
+        self,
+        method: Literal["loess_v1", "loess_v2", "spline"] = "loess_v2",
+        **kwargs
+    ) -> "ElevationProfile":
+        """
+        Return a new ElevationProfile with smoothed elevation values using the specified method.
+
+        Args:
+            method (Literal["loess_v1", "loess_v2", "spline"]): 
+                Name of the smoothing method to apply. Default is "loess_v2".
+            **kwargs: Optional keyword arguments forwarded to the smoothing method.
+                Unused arguments will trigger a warning:
+                - "loess_v1" accepts: window
+                - "loess_v2" accepts: window, iter
+                - "spline" accepts: s, k
+
+        Returns:
+            ElevationProfile: A new profile with smoothed elevation values.
+
+        Raises:
+            ValueError: If the smoothing method is unsupported.
+        """
+        # Allowed arguments for each method
+        allowed_args = {
+            "loess_v1": {"window"},
+            "loess_v2": {"window", "iter"},
+            "spline": {"s", "k"},
+        }
+
+        # Get list of unknown arguments and print info message
+        expected_args = allowed_args.get(method)
+        unknown_args = set(kwargs) - expected_args
+
+        if unknown_args:
+            print(f"[INFO] Unused arguments for '{method}': {sorted(unknown_args)}")
+
+        # Do smoothing based given parameters
+        y = self.get_elevations()
+        x = self.distances
+
+        if method == "loess_v1":
+            from src.curve_smoothing.loess_v1 import loess
+            smoothed_elevations = loess(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        elif method == "loess_v2":
+            from src.curve_smoothing.loess_v2 import loess_v2
+            smoothed_elevations = loess_v2(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        elif method == "spline":
+            from src.curve_smoothing.spline_fit import spline_fit
+            smoothed_elevations = spline_fit(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        else:
+            raise ValueError(f"Unsupported smoothing method: {method}")
+
+        new_profile = self.copy()
+        new_profile.set_elevations(smoothed_elevations)
+        return new_profile
 
 
 class Track:
@@ -436,6 +496,63 @@ class Track:
 
         new_track = self.copy()
         new_track.set_elevations(elevations)
+        return new_track
+    
+    def with_smoothed_elevations(
+        self,
+        method: Literal["loess_v1", "loess_v2", "spline"] = "loess_v2",
+        **kwargs
+    ) -> "Track":
+        """
+        Return a new Track instance with smoothed elevation values using the specified method.
+
+        Args:
+            method (Literal["loess_v1", "loess_v2", "spline"]): 
+                Name of the smoothing method to apply. Default is "loess_v2".
+            **kwargs: Optional keyword arguments forwarded to the smoothing method.
+                Unused arguments will trigger a warning:
+                - "loess_v1" accepts: window
+                - "loess_v2" accepts: window, iter
+                - "spline" accepts: s, k
+
+        Returns:
+            Track: A new Track instance with smoothed elevations.
+
+        Raises:
+            ValueError: If an unsupported smoothing method is provided.
+        """
+        allowed_args = {
+            "loess_v1": {"window"},
+            "loess_v2": {"window", "iter"},
+            "spline": {"s", "k"},
+        }
+
+        expected_args = allowed_args.get(method)
+        unknown_args = set(kwargs) - expected_args
+
+        if unknown_args:
+            print(f"[INFO] Unused arguments for '{method}': {sorted(unknown_args)}")
+
+        x = self.elevation_profile.distances
+        y = self.elevation_profile.get_elevations()
+
+        if method == "loess_v1":
+            from src.curve_smoothing.loess_v1 import loess
+            smoothed_elevations = loess(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        elif method == "loess_v2":
+            from src.curve_smoothing.loess_v2 import loess_v2
+            smoothed_elevations = loess_v2(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        elif method == "spline":
+            from src.curve_smoothing.spline_fit import spline_fit
+            smoothed_elevations = spline_fit(x=x, y=y, **{k: v for k, v in kwargs.items() if k in expected_args})
+
+        else:
+            raise ValueError(f"Unsupported smoothing method: {method}")
+
+        new_track = self.copy()
+        new_track.set_elevations(smoothed_elevations)
         return new_track
 
     @staticmethod
