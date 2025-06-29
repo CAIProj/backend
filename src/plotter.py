@@ -523,7 +523,7 @@ def plot_synchronized_2d(args):
     if args.add_openstreetmap:
         track_2 = track_1.with_api_elevations(OpenStreetMapElevationAPI)
     else:
-        track_2 = Track.from_gpx_file(args.add_gpx)
+        track_2 = Track.from_gpx_file(args.second_gpx)
 
     # Choose sync method
     sync_methods = {
@@ -658,12 +658,12 @@ def plot_surface(args):
 
     try:
         output = args.output if args.output else None
-        if args.add_gpx or args.add_gpx:
-            if args.add_gpx:
+        if args.second_gpx or args.second_gpx:
+            if args.second_gpx:
                 gpx2_points = [Point(p.latitude, p.longitude) for p in gpx1_points]
                 gpx2_points = OpenElevationAPI.get_elevations(gpx2_points)
             else:
-                gpx_file_2 = args.add_gpx
+                gpx_file_2 = args.second_gpx
                 gpx2_points = Track.from_gpx_file(gpx_file_2).points
             if args.title:
                 SurfacePlot.plot_comparison(gpx1_points, gpx2_points, title=args.title, output=output)

@@ -14,12 +14,13 @@ def main():
     parser.add_argument("base_gpx", help="Path to the base GPX file")
 
     # Comparison source options
-    parser.add_argument("--add-gpx", help="Add a second GPX file for comparison")
-    parser.add_argument("--add-openstreetmap", action="store_true", help="Add elevation data using OpenStreetMapElevationAPI")
-    parser.add_argument("--add-openelevation", action="store_true", help="Add elevation data using a generic elevation API")
-    parser.add_argument("--add-loess1", action="store_true", help="Apply LOESS v1 smoothing to generate comparison elevation")
-    parser.add_argument("--add-loess2", action="store_true", help="Apply LOESS v2 smoothing to generate comparison elevation")
-    parser.add_argument("--add-spline", action="store_true", help="Apply spline smoothing to generate comparison elevation")
+    parser.add_argument("--second-gpx", help="Add a second GPX file")
+    parser.add_argument("--add-openstreetmap", action="store_true", help="Add elevation data of base GPX using OpenStreetMapElevationAPI")
+    parser.add_argument("--add-openelevation", action="store_true", help="Add elevation data of base GPX using OpenElevationAPI")
+    parser.add_argument("--add-loess1", action="store_true", help="Add smoothed base GPX elevations with LOESS v1")
+    parser.add_argument("--add-loess2", action="store_true", help="Add smoothed base GPX elevations with LOESS v2")
+    parser.add_argument("--add-spline", action="store_true", help="Add smoothed base GPX elevations with spline")
+    
 
     # Synchronized elevation options
     synchronized_elevation_group = parser.add_argument_group("Synchronized Elevation Plot Options")
@@ -54,7 +55,7 @@ def main():
     if args.plot_type == "elevation" and args.sync_method:
         # Validation for synchronized comparison
         sync_sources = [
-            args.add_gpx,
+            args.second_gpx,
             args.add_openstreetmap,
             args.add_openelevation,
             args.add_loess1,
@@ -65,37 +66,37 @@ def main():
         
         if num_sources != 1:
             parser.error("When using --sync-method, exactly one comparison source must be specified: "
-                         "--add-gpx or one of the --add-* options")
+                         "--second-gpx or one of the --add-* options")
         if args.tolerance and not args.tolerance_method:
             parser.error("--tolerance-method is required when using tolerance")
         
         # If only one source is provided, load it
-        if args.add_gpx:
-            loaded_tracks["add_gpx"] = Track.from_gpx_file(args.add_gpx)
+        if args.second_gpx:
+            loaded_tracks["second_gpx"] = Track.from_gpx_file(args.second_gpx)
         elif args.add_openstreetmap:
-            loaded_tracks["add_openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+            loaded_tracks["openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
         elif args.add_openelevation:
-            loaded_tracks["add_openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+            loaded_tracks["openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
         elif args.add_loess1:
-            loaded_tracks["add_loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+            loaded_tracks["loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
         elif args.add_loess2:
-            loaded_tracks["add_loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+            loaded_tracks["loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
         elif args.add_spline:
-            loaded_tracks["add_spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
+            loaded_tracks["spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
     else:
         # Load all tracks based one the given arguments
-        if args.add_gpx:
-            loaded_tracks["add_gpx"] = Track.from_gpx_file(args.add_gpx)
+        if args.second_gpx:
+            loaded_tracks["second_gpx"] = Track.from_gpx_file(args.second_gpx)
         if args.add_openstreetmap:
-            loaded_tracks["add_openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+            loaded_tracks["openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
         if args.add_openelevation:
-            loaded_tracks["add_openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+            loaded_tracks["openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
         if args.add_loess1:
-            loaded_tracks["add_loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+            loaded_tracks["loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
         if args.add_loess2:
-            loaded_tracks["add_loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+            loaded_tracks["loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
         if args.add_spline:
-            loaded_tracks["add_spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
+            loaded_tracks["spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
 
 
     # Plotting logic
@@ -104,9 +105,9 @@ def main():
             plotter = Plotter()
             
             # Add all the profiles from loaded tracks
-            for track in loaded_tracks.values():
-                plotter.add_profiles(track.elevation_profile)
-
+            for name, track in loaded_tracks.items():            
+                plotter.add_profiles((track.elevation_profile, name.replace('_', ' ').capitalize()))
+            
             # Plot 3D lat vs. lon vs. elevation
             if args.title:
                 # plotter.plot_3d_lat_lon_elevation(title=args.title, output=args.output)
@@ -125,9 +126,9 @@ def main():
                 plotter = Plotter()
 
                 # Add all the profiles from loaded tracks
-                for track in loaded_tracks.values():
-                    plotter.add_profiles(track.elevation_profile)
-
+                for name, track in loaded_tracks.items():
+                    plotter.add_profiles((track.elevation_profile, name.replace('_', ' ').capitalize()))
+                    
                 # Plot ele vs. distance
                 if args.title:
                     # plotter.plot_distance_vs_elevation(title=args.title, output=args.output)
