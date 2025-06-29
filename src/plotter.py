@@ -607,37 +607,3 @@ def plot_synchronized_2d(args):
         plot_kwargs["title"] = args.title
 
     SynchronizedElevationPlotter.plot_comparison(**plot_kwargs)
-
-
-def plot_surface(args):
-    """
-    This method is called from main.py if a 2d surface plot is desired
-    :param args: arguments passed from the command line
-    :return:
-    """
-    gpx1 = args.base_gpx
-    gpx1_points = Track.from_gpx_file(gpx1).points
-
-    try:
-        output = args.output if args.output else None
-        if args.add_openelevation or args.add_openstreetmap or args.second_gpx:
-            if args.add_openelevation:
-                gpx2_points = [Point(p.latitude, p.longitude) for p in gpx1_points]
-                gpx2_points = OpenElevationAPI.get_elevations(gpx2_points)
-            elif args.add_openstreetmap:
-                gpx2_points = [Point(p.latitude, p.longitude) for p in gpx1_points]
-                gpx2_points = OpenStreetMapElevationAPI.get_elevations(gpx2_points)
-            else:
-                gpx_file_2 = args.second_gpx
-                gpx2_points = Track.from_gpx_file(gpx_file_2).points
-            if args.title:
-                SurfacePlot.plot_comparison(gpx1_points, gpx2_points, title=args.title, output=output)
-            else:
-                SurfacePlot.plot_comparison(gpx1_points, gpx2_points, output=output)
-        else:
-            if args.title:
-                SurfacePlot.plot_single(gpx1_points, title=args.title, output=output)
-            else:
-                SurfacePlot.plot_single(gpx1_points, output=output)
-    except:
-        raise
