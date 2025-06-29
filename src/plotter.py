@@ -668,10 +668,13 @@ def plot_surface(args):
 
     try:
         output = args.output if args.output else None
-        if args.second_gpx or args.second_gpx:
-            if args.second_gpx:
+        if args.add_openelevation or args.add_openstreetmap or args.second_gpx:
+            if args.add_openelevation:
                 gpx2_points = [Point(p.latitude, p.longitude) for p in gpx1_points]
                 gpx2_points = OpenElevationAPI.get_elevations(gpx2_points)
+            elif args.add_openstreetmap:
+                gpx2_points = [Point(p.latitude, p.longitude) for p in gpx1_points]
+                gpx2_points = OpenStreetMapElevationAPI.get_elevations(gpx2_points)
             else:
                 gpx_file_2 = args.second_gpx
                 gpx2_points = Track.from_gpx_file(gpx_file_2).points
