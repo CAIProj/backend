@@ -1,4 +1,4 @@
-from src.plotter import Plotter, plot2d, plot_surface
+from src.plotter import Plotter, plot_synchronized_2d, plot_surface
 from src.models import Track
 import argparse
 
@@ -62,7 +62,7 @@ def main():
         except:
             raise
     elif args.plot_type == "elevation":
-        plot2d(args)
+        plot_synchronized_2d(args)
     elif args.plot_type == "surface":
         plot_surface(args)
 

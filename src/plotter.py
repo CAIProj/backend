@@ -172,9 +172,9 @@ class Plotter:
         plt.show()
 
 
-class ElevationPlotter:
+class SynchronizedElevationPlotter:
     """
-    This class contains all the methods needed for a 2D elevation plot
+    A utility class for synchronization and comparison between two elevation profiles.
     """
 
     @staticmethod
@@ -409,9 +409,9 @@ class ElevationPlotter:
         gpx2_profile.set_distances([d + best_shift_distance for d in gpx2_profile.distances])
 
         if tolerance_method == "standard":
-            return gpx1_profile, gpx2_profile, ElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
         else:
-            return gpx1_profile, gpx2_profile, ElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
 
 
     @staticmethod
@@ -449,9 +449,9 @@ class ElevationPlotter:
         gpx1_profile = ElevationProfile(gpx1)
         gpx2_profile = ElevationProfile(gpx2)
         if tolerance_method == "standard":
-            return gpx1_profile, gpx2_profile, ElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
         else:
-            return gpx1_profile, gpx2_profile, ElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
 
     @staticmethod
     def interpolate_elevations(
@@ -504,14 +504,14 @@ class ElevationPlotter:
         gpx2_profile.set_elevations(new_elevations)
 
         if tolerance_method == "standard":
-            return gpx1_profile, gpx2_profile, ElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.get_tolerance_vector(gpx1_profile, gpx2_profile, tolerance)
         else:
-            return gpx1_profile, gpx2_profile, ElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
+            return gpx1_profile, gpx2_profile, SynchronizedElevationPlotter.kdtree_tolerance(gpx1_profile, gpx2_profile, tolerance)
 
 
-def plot2d(args):
+def plot_synchronized_2d(args):
     """
-    This method is called from main.py if a 2D elevation plot is desired.
+    Generate a synchronized 2D elevation comparison plot between two tracks.
 
     Args:
         args: Arguments passed from the command line.
@@ -527,9 +527,9 @@ def plot2d(args):
 
     # Choose sync method
     sync_methods = {
-        "elevation_sync": ElevationPlotter.elevation_sync,
-        "start_sync": ElevationPlotter.start_sync,
-        "interpolate_elevations": ElevationPlotter.interpolate_elevations
+        "elevation_sync": SynchronizedElevationPlotter.elevation_sync,
+        "start_sync": SynchronizedElevationPlotter.start_sync,
+        "interpolate_elevations": SynchronizedElevationPlotter.interpolate_elevations
     }
 
     if args.sync_method not in sync_methods:
@@ -556,7 +556,8 @@ def plot2d(args):
     if args.title:
         plot_kwargs["title"] = args.title
 
-    ElevationPlotter.plot_comparison(**plot_kwargs)
+    SynchronizedElevationPlotter.plot_comparison(**plot_kwargs)
+
 
 class SurfacePlot:
     """
