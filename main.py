@@ -33,8 +33,7 @@ def main():
     synchronized_elevation_group.add_argument(
         "--tolerance-method",
         choices=["standard", "kdtree"],
-        default="standard",
-        help="Method for calculating tolerance (default: standard)"
+        help="Method for calculating tolerance"
     )
 
     # General options
@@ -47,13 +46,9 @@ def main():
     # Parse arguments
     args = parser.parse_args()
 
-    # Load base track early so it's accessible to all plot types
-    base_gpx_track = Track.from_gpx_file(args.base_gpx)
-    loaded_tracks = {"base_gpx": base_gpx_track}
-
-    # Add relevant tracks in tracks dict
-    if args.plot_type == "elevation" and args.sync_method:
-        # Validation for synchronized comparison
+    # Validate sync-related inputs
+    # --- For synchronized elevation plots exactly one comparison source must be specified
+    if args.plot_type == "elevation" and args.sync_method:  
         sync_sources = [
             args.second_gpx,
             args.add_openstreetmap,
@@ -67,36 +62,49 @@ def main():
         if num_sources != 1:
             parser.error("When using --sync-method, exactly one comparison source must be specified: "
                          "--second-gpx or one of the --add-* options")
-        if args.tolerance and not args.tolerance_method:
-            parser.error("--tolerance-method is required when using tolerance")
+    # --- tolerance and tolerance_method are only relevant for synchronized elevation plots
+    if args.tolerance or args.tolerance_method:
+        if not args.plot_type == "elevation":
+            if args.sync_method:
+                parser.error("For synced plot plot-type must be `elevation`")
+            else:
+                parser.error("For synced plot plot-type must be `elevation` and --sync-method must be specified")
+        else:
+            if not args.sync_method:
+                parser.error("For synced plot --sync-method is required")
         
-        # If only one source is provided, load it
+
+    # Load base track and other tracks according to plot type
+    base_gpx_track = Track.from_gpx_file(args.base_gpx)
+    loaded_tracks = {"base_gpx": base_gpx_track}
+
+    if args.plot_type == "elevation" and args.sync_method:
         if args.second_gpx:
             loaded_tracks["second_gpx"] = Track.from_gpx_file(args.second_gpx)
         elif args.add_openstreetmap:
-            loaded_tracks["openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+            loaded_tracks["openstreetmap"] = base_gpx_track.with_api_elevations(OpenStreetMapElevationAPI)
         elif args.add_openelevation:
-            loaded_tracks["openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+            loaded_tracks["openelevation"] = base_gpx_track.with_api_elevations(OpenElevationAPI)
         elif args.add_loess1:
-            loaded_tracks["loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+            loaded_tracks["loess1"] = base_gpx_track.with_smoothed_elevations("loess_v1")
         elif args.add_loess2:
-            loaded_tracks["loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+            loaded_tracks["loess2"] = base_gpx_track.with_smoothed_elevations("loess_v2")
         elif args.add_spline:
-            loaded_tracks["spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
+            loaded_tracks["spline"] = base_gpx_track.with_smoothed_elevations("spline")
     else:
         # Load all tracks based one the given arguments
         if args.second_gpx:
             loaded_tracks["second_gpx"] = Track.from_gpx_file(args.second_gpx)
         if args.add_openstreetmap:
-            loaded_tracks["openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+            loaded_tracks["openstreetmap"] = base_gpx_track.with_api_elevations(OpenStreetMapElevationAPI)
         if args.add_openelevation:
-            loaded_tracks["openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+            loaded_tracks["openelevation"] = base_gpx_track.with_api_elevations(OpenElevationAPI)
         if args.add_loess1:
-            loaded_tracks["loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+            loaded_tracks["loess1"] = base_gpx_track.with_smoothed_elevations("loess_v1")
         if args.add_loess2:
-            loaded_tracks["loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+            loaded_tracks["loess2"] = base_gpx_track.with_smoothed_elevations("loess_v2")
         if args.add_spline:
-            loaded_tracks["spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
+            loaded_tracks["spline"] = base_gpx_track.with_smoothed_elevations("spline")
 
 
     # Plotting logic
@@ -105,10 +113,8 @@ def main():
             plotter = Plotter()
             
             # Add all the profiles from loaded tracks
-            for name, track in loaded_tracks.items():            
+            for name, track in loaded_tracks.items():
                 plotter.add_profiles((track.elevation_profile, name.replace('_', ' ').capitalize()))
-            
-            # Plot 3D lat vs. lon vs. elevation
             if args.title:
                 plotter.plot_3d_lat_lon_elevation(title=args.title, output=args.output)
             else:
