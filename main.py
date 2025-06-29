@@ -1,24 +1,35 @@
 from src.plotter import Plotter, plot_synchronized_2d, plot_surface
 from src.models import Track
+from src.elevation_api import OpenStreetMapElevationAPI, OpenElevationAPI
 import argparse
 
 def main():
-    parser = argparse.ArgumentParser(description="Compare GPX Elevation with API")
-    parser.add_argument("plot_type", choices=["3d", "elevation", "surface"])
-    parser.add_argument("base_gpx", help="Path to the base GPX file")
-    parser.add_argument("--gpx2", help="Path to a comparison GPX file")
+    parser = argparse.ArgumentParser(description="Compare GPX Elevation Profiles")
 
-    # Elevation specific options
-    elevation_group = parser.add_argument_group("Elevation Plot Options")
-    elevation_group.add_argument(
+    parser.add_argument(
+        "plot_type",
+        choices=["3d", "elevation", "surface"],
+        help="Plot type: '3d' for basic 3D plot, 'elevation' for optional sync comparison, 'surface' for elevation surface plot"
+    )
+    parser.add_argument("base_gpx", help="Path to the base GPX file")
+
+    # Comparison source options
+    parser.add_argument("--add-gpx", help="Add a second GPX file for comparison")
+    parser.add_argument("--add-openstreetmap", action="store_true", help="Add elevation data using OpenStreetMapElevationAPI")
+    parser.add_argument("--add-openelevation", action="store_true", help="Add elevation data using a generic elevation API")
+    parser.add_argument("--add-loess1", action="store_true", help="Apply LOESS v1 smoothing to generate comparison elevation")
+    parser.add_argument("--add-loess2", action="store_true", help="Apply LOESS v2 smoothing to generate comparison elevation")
+    parser.add_argument("--add-spline", action="store_true", help="Apply spline smoothing to generate comparison elevation")
+
+    # Synchronized elevation options
+    synchronized_elevation_group = parser.add_argument_group("Synchronized Elevation Plot Options")
+    synchronized_elevation_group.add_argument(
         "--sync-method",
         choices=["elevation_sync", "start_sync", "interpolate_elevations"],
-        default="elevation_sync",
-        help="Synchronisation Method (default: elevation_sync)"
+        help="Synchronisation method to align elevation profiles"
     )
-    elevation_group.add_argument("--use-api", action="store_true", help="Use elevation from API instead of a second GPX file")
-    elevation_group.add_argument("--tolerance", type=float, help="Tolerance range in km for comparison")
-    elevation_group.add_argument(
+    synchronized_elevation_group.add_argument("--tolerance", type=float, help="Tolerance range in km for comparison")
+    synchronized_elevation_group.add_argument(
         "--tolerance-method",
         choices=["standard", "kdtree"],
         default="standard",
@@ -30,43 +41,102 @@ def main():
     general_group.add_argument("--output", help="Save the plot to this file instead of displaying it")
     general_group.add_argument("--title", help="Custom title for the plot")
 
+
+
+    # Parse arguments
     args = parser.parse_args()
 
-    # Argument Validation 
-    if args.plot_type == "elevation":
-        if not (args.gpx2 or args.use_api):
-            parser.error("Elevation plots require --gpx2 or --use-api")
-        if args.tolerance and not args.gpx2 and not args.use_api:
-            parser.error("Tolerance requires a comparison source: either a second file using --gpx2 or elevation data using --use-api")
+    # Load base track early so it's accessible to all plot types
+    base_gpx_track = Track.from_gpx_file(args.base_gpx)
+    loaded_tracks = {"base_gpx": base_gpx_track}
 
-    if args.plot_type == "3d" and not args.gpx2:
-        parser.error("3D plots require --gpx2")
+    # Add relevant tracks in tracks dict
+    if args.plot_type == "elevation" and args.sync_method:
+        # Validation for synchronized comparison
+        sync_sources = [
+            args.add_gpx,
+            args.add_openstreetmap,
+            args.add_openelevation,
+            args.add_loess1,
+            args.add_loess2,
+            args.add_spline
+        ]
+        num_sources = sum(bool(src) for src in sync_sources)
+        
+        if num_sources != 1:
+            parser.error("When using --sync-method, exactly one comparison source must be specified: "
+                         "--add-gpx or one of the --add-* options")
+        if args.tolerance and not args.tolerance_method:
+            parser.error("--tolerance-method is required when using tolerance")
+        
+        # If only one source is provided, load it
+        if args.add_gpx:
+            loaded_tracks["add_gpx"] = Track.from_gpx_file(args.add_gpx)
+        elif args.add_openstreetmap:
+            loaded_tracks["add_openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+        elif args.add_openelevation:
+            loaded_tracks["add_openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+        elif args.add_loess1:
+            loaded_tracks["add_loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+        elif args.add_loess2:
+            loaded_tracks["add_loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+        elif args.add_spline:
+            loaded_tracks["add_spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
+    else:
+        # Load all tracks based one the given arguments
+        if args.add_gpx:
+            loaded_tracks["add_gpx"] = Track.from_gpx_file(args.add_gpx)
+        if args.add_openstreetmap:
+            loaded_tracks["add_openstreetmap"] = loaded_tracks['base_gpx'].with_api_elevations(OpenStreetMapElevationAPI)
+        if args.add_openelevation:
+            loaded_tracks["add_openelevation"] = loaded_tracks['base_gpx'].with_api_elevations(OpenElevationAPI)
+        if args.add_loess1:
+            loaded_tracks["add_loess1"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v1")
+        if args.add_loess2:
+            loaded_tracks["add_loess2"] = loaded_tracks['base_gpx'].with_smoothed_elevations("loess_v2")
+        if args.add_spline:
+            loaded_tracks["add_spline"] = loaded_tracks['base_gpx'].with_smoothed_elevations("spline")
 
-    if args.tolerance and not args.tolerance_method:
-        parser.error("--tolerance-method is required when using tolerance")
 
     # Plotting logic
     if args.plot_type == "3d":
-        output = args.output if args.output else None # file path to save the plot, if None display the plot plot
         try:
-            profile1 = Track.from_gpx_file(args.base_gpx).elevation_profile
-            profile2 = Track.from_gpx_file(args.gpx2).elevation_profile
+            plotter = Plotter()
+            
+            # Add all the profiles from loaded tracks
+            for track in loaded_tracks.values():
+                plotter.add_profiles(track.elevation_profile)
 
-            plotter = Plotter([
-                profile1,
-                profile2,
-            ])
-
+            # Plot 3D lat vs. lon vs. elevation
             if args.title:
-                plotter.plot_3d_lat_lon_elevation(title=args.title, output=output)
+                # plotter.plot_3d_lat_lon_elevation(title=args.title, output=args.output)
+                plotter.plot_3d_lat_lon_elevation(title=args.title)
             else:
-                plotter.plot_3d_lat_lon_elevation(output=output)
-
+                # plotter.plot_3d_lat_lon_elevation(output=args.output)
+                plotter.plot_3d_lat_lon_elevation()
         except Exception as e:
-            raise RuntimeError(f"3D plot failed: {e}")
+            raise RuntimeError(f"Failed to plot 3d: {e}")
 
     elif args.plot_type == "elevation":
-        plot_synchronized_2d(args)
+        if args.sync_method:
+            plot_synchronized_2d(args)
+        else:
+            try:
+                plotter = Plotter()
+
+                # Add all the profiles from loaded tracks
+                for track in loaded_tracks.values():
+                    plotter.add_profiles(track.elevation_profile)
+
+                # Plot ele vs. distance
+                if args.title:
+                    # plotter.plot_distance_vs_elevation(title=args.title, output=args.output)
+                    plotter.plot_distance_vs_elevation(title=args.title)
+                else:
+                    # plotter.plot_distance_vs_elevation(output=args.output)
+                    plotter.plot_distance_vs_elevation()
+            except Exception as e:
+                raise RuntimeError(f"Failed to plot elevation: {e}")
 
     elif args.plot_type == "surface":
         plot_surface(args)
