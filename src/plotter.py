@@ -100,7 +100,8 @@ class Plotter:
         self,
         title: str = "Elevation Comparison",
         xlabel: str = "Distance (km)",
-        ylabel: str = "Elevation (m)"
+        ylabel: str = "Elevation (m)",
+        output: Optional[str] = None
     ) -> None:
         """
         Plot elevation vs distance for all stored profiles.
@@ -109,6 +110,7 @@ class Plotter:
             title (str, optional): Title of the plot. Defaults to "Elevation Profiles Comparison".
             xlabel (str, optional): Label for the x-axis. Defaults to "Distance (km)".
             ylabel (str, optional): Label for the y-axis. Defaults to "Elevation (m)".
+            output (Optional[str], optional): If provided, saves the plot to this file path.
         """
         if not self.profiles:
             print("No profiles to plot.")
@@ -129,14 +131,18 @@ class Plotter:
         plt.grid(True, alpha=0.3)
         plt.legend()
         plt.tight_layout()
-        plt.show()
+        if output:
+            plt.savefig(output)
+        else:
+            plt.show()
     
     def plot_3d_lat_lon_elevation(
         self,
         title: str = "3D Plot of Elevation Profiles",
         xlabel: str = "Latitude",
         ylabel: str = "Longitude",
-        zlabel: str = "Elevation (m)"
+        zlabel: str = "Elevation (m)",
+        output: Optional[str] = None
     ) -> None:
         """
         Plot 3D trajectories of stored elevation profiles using latitude, longitude, and elevation.
@@ -146,6 +152,7 @@ class Plotter:
             xlabel (str, optional): Label for the x-axis. Defaults to "Latitude".
             ylabel (str, optional): Label for the y-axis. Defaults to "Longitude".
             zlabel (str, optional): Label for the z-axis. Defaults to "Elevation (m)".
+            output (Optional[str], optional): If provided, saves the plot to this file path.
         """
         if not self.profiles:
             print("No profiles to plot.")
@@ -169,7 +176,10 @@ class Plotter:
         ax.set_zlabel(zlabel)
         ax.legend()
         plt.tight_layout()
-        plt.show()
+        if output:
+            plt.savefig(output)
+        else:
+            plt.show()
 
 
 class SynchronizedElevationPlotter:
@@ -676,5 +686,3 @@ def plot_surface(args):
                 SurfacePlot.plot_single(gpx1_points, output=output)
     except:
         raise
-
-

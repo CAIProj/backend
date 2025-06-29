@@ -110,11 +110,9 @@ def main():
             
             # Plot 3D lat vs. lon vs. elevation
             if args.title:
-                # plotter.plot_3d_lat_lon_elevation(title=args.title, output=args.output)
-                plotter.plot_3d_lat_lon_elevation(title=args.title)
+                plotter.plot_3d_lat_lon_elevation(title=args.title, output=args.output)
             else:
-                # plotter.plot_3d_lat_lon_elevation(output=args.output)
-                plotter.plot_3d_lat_lon_elevation()
+                plotter.plot_3d_lat_lon_elevation(output=args.output)
         except Exception as e:
             raise RuntimeError(f"Failed to plot 3d: {e}")
 
@@ -131,11 +129,9 @@ def main():
                     
                 # Plot ele vs. distance
                 if args.title:
-                    # plotter.plot_distance_vs_elevation(title=args.title, output=args.output)
-                    plotter.plot_distance_vs_elevation(title=args.title)
+                    plotter.plot_distance_vs_elevation(title=args.title, output=args.output)
                 else:
-                    # plotter.plot_distance_vs_elevation(output=args.output)
-                    plotter.plot_distance_vs_elevation()
+                    plotter.plot_distance_vs_elevation(output=args.output)
             except Exception as e:
                 raise RuntimeError(f"Failed to plot elevation: {e}")
 
