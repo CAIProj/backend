@@ -1,4 +1,4 @@
-from src.plotter import Plotter, plot_synchronized_2d, plot_surface
+from src.plotter import Plotter, plot_synchronized_2d
 from src.models import Track
 from src.elevation_api import OpenStreetMapElevationAPI, OpenElevationAPI
 import argparse
@@ -136,7 +136,16 @@ def main():
                 raise RuntimeError(f"Failed to plot elevation: {e}")
 
     elif args.plot_type == "surface":
-        plot_surface(args)
+        try:
+            plotter = Plotter()
+            for name, track in loaded_tracks.items():
+                plotter.add_profiles((track.elevation_profile, name.replace('_', ' ').capitalize()))
+            if args.title:
+                plotter.plot_lat_vs_lon(title=args.title, output=args.output)
+            else:
+                plotter.plot_lat_vs_lon(output=args.output)
+        except Exception as e:
+            raise RuntimeError(f"Failed to plot elevation: {e}")
 
 if __name__ == "__main__":
     main()

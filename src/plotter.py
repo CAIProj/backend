@@ -135,7 +135,47 @@ class Plotter:
             plt.savefig(output)
         else:
             plt.show()
-    
+
+    def plot_lat_vs_lon(
+        self,
+        title: str = "Latitude vs Longitude Plot",
+        xlabel: str = "Latitude",
+        ylabel: str = "Longitude",
+        output: Optional[str] = None
+    ) -> None:
+        """
+        Plot latitude vs longitude for all stored profiles.
+
+        Args:
+            title (str, optional): Title of the plot. Defaults to "Latitude vs Longitude Plot".
+            xlabel (str, optional): Label for the x-axis. Defaults to "Latitude".
+            ylabel (str, optional): Label for the y-axis. Defaults to "Longitude".
+            output (Optional[str], optional): If provided, saves the plot to this file path.
+        """
+        if not self.profiles:
+            print("No profiles to plot.")
+            return
+
+        plt.figure(figsize=(12, 6))
+        for name, profile in self.profiles.items():
+            plt.plot(
+                profile.get_latitudes(),
+                profile.get_longitudes(),
+                label=name,
+                linewidth=2
+            )
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plt.tight_layout()
+        if output:
+            plt.savefig(output)
+        else:
+            plt.show()
+
     def plot_3d_lat_lon_elevation(
         self,
         title: str = "3D Plot of Elevation Profiles",
@@ -568,94 +608,6 @@ def plot_synchronized_2d(args):
 
     SynchronizedElevationPlotter.plot_comparison(**plot_kwargs)
 
-
-class SurfacePlot:
-    """
-    This class contains the methods needed for a 2d surface (lat, lon) plot
-    """
-    @staticmethod
-    def plot_comparison(
-            gpx1: list[Point],
-            gpx2: list[Point],
-            label1: str = "Base Route",
-            label2: str = "Comparison Route",
-            title: str = "Surface Route Comparison",
-            output: str = None
-    ):
-        """
-        This method is used to plot two tracks for comparison
-        :param gpx1: Required. The first route to be plotted
-        :param gpx2: Required. The second route to be plotted
-        :param label1: Optional. The label for the first route
-        :param label2: Optional. The label for the second route
-        :param title: Optional. The title for the plot
-        :param output: Optional. The file path to save the plot, if None it will display the plot
-        :return:
-        """
-        plt.figure(figsize=(12, 6))
-
-        plt.plot(
-            [p.latitude for p in gpx1],
-            [p.longitude for p in gpx1],
-            label=label1,
-            color='blue',
-            linewidth=2
-        )
-
-        plt.plot(
-            [p.latitude for p in gpx2],
-            [p.longitude for p in gpx2],
-            label=label2,
-            color='red',
-            linewidth=2,
-            alpha = 0.7
-        )
-
-        plt.title(title)
-        plt.xlabel("Latitude")
-        plt.ylabel("Longitude")
-        plt.grid(True, alpha=0.3)
-        plt.legend()
-        plt.tight_layout()
-        if output:
-            plt.savefig(output)
-        else:
-            plt.show()
-
-    @staticmethod
-    def plot_single(
-            gpx1: list[Point],
-            label: str = "Route",
-            title: str = "Route Plot",
-            output: str = None
-    ):
-        """
-        This method is to plot a single track
-        :param gpx1: Required. The (parsed) gpx file to be plotted
-        :param label: Optional. The label for the plot
-        :param title: Optional. The title for the plot
-        :param output: Optional. The file path to save the plot, if None it will only display the plot
-        :return:
-        """
-        plt.figure(figsize=(12,6))
-
-        plt.plot(
-            [p.latitude for p in gpx1],
-            [p. longitude for p in gpx1],
-            label=label,
-            color='black',
-            linewidth=2
-        )
-
-        plt.title(title)
-        plt.xlabel("Latitude")
-        plt.ylabel("Longitude")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        if output:
-            plt.savefig(output)
-        else:
-            plt.show()
 
 def plot_surface(args):
     """
