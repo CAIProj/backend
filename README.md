@@ -23,20 +23,31 @@
    ```
 
 
-## Curve-smoothing Algorithms
+## Curve-Smoothing Algorithms
 
--   Utilising mathematical algorithms to smooth a noisy curve.
--   They are
-    -   Spline Fit (scipy)
-    -   Loess-v1
-    -   Loess-v2
-    -   Savitzky-Golay Filter
+Utilises mathematical algorithms to smooth noisy elevation data.
 
--   To test locally;
-    -   Set up the python environment as described above
-    -   Open the terminal in `curve_smoothing` folder
-    -   run `python -m test.loess_vs_spline` or `python -m test.test_loess_v2` or other files
-    -   Read/run the `curve_smoothing_algo.ipynb` to learn more about the algorithms
+### Included Algorithms
+
+- Spline Fit (via `scipy`)
+- Loess-v1
+- Loess-v2
+
+### Running the Demos Locally
+
+1. **Set up the Python environment** as described above.
+2. **From backend repo run one of the test modules like this**:
+   ```sh
+   python -m test.curve_smoothing.test_loess_v1
+   python -m test.curve_smoothing.test_loess_v2
+   python -m test.curve_smoothing.test_spline_fit
+   python -m test.curve_smoothing.loessv1_vs_loessv2
+   python -m test.curve_smoothing.loess_vs_spline
+   ```
+3. **(Optional)** Open the notebook for an algorithm walkthrough:
+   ```sh
+   notebooks\curve_smoothing_algo.ipynb
+   ```
 
 
 ## gpx_dataengine
