@@ -25,8 +25,3 @@
 -   Compare gpx altitude and `open-elevation` online library's altitude
 -   Plot and compare unparalleled gpx file
 -   The distance between two geographic coordinates is calculated using the Haversine formula, assuming the Earth's radius is 6371.0 km.
-
-### `srtm` module installation - Not available in PyPI
-
--   Type this command for installation (Works on Windows) <br>
-    `pip install git+https://github.com/tkrajina/srtm.py.git`
