@@ -3,25 +3,29 @@
 ## 🔧 Setting Up the Python Environment Locally
 
 1. **Clone the repository** to your local machine.
+
    ```sh
    git clone https://github.com/CAIProj/backend.git
    ```
 2. **Navigate to the cloned directory**.
+
    ```sh
    cd backend
    ```
 3. **Install dependencies**.
 
    Using [Poetry](https://python-poetry.org/):
+
    ```sh
    pip install poetry
    poetry install --no-root
    ```
+
    or using requirements.txt with pip:
+
    ```sh
    pip install -r requirements.txt
    ```
-
 
 ## Curve-Smoothing Algorithms
 
@@ -50,10 +54,10 @@ Utilises mathematical algorithms to smooth noisy elevation data.
    ```
 
 
-## gpx_dataengine
+## GPX Track Processing and Elevation Analysis
 
--   Retrieve Latitiude, Longitude, Altitude from a GPX file
--   Retrieve `MSL(Mean Sea Level)` Altitude
--   Compare gpx altitude and `open-elevation` online library's altitude
--   Plot and compare unparalleled gpx file
--   The distance between two geographic coordinates is calculated using the Haversine formula, assuming the Earth's radius is 6371.0 km.
+- Load latitude, longitude, and altitude from a GPX file using `Track.from_gpx_file()`
+- Retrieve a new track with altitude data from online APIs using `track.with_api_elevations()`
+- Generate a new track with smoothed elevation using `track.with_smoothed_elevations()`
+- Perform simple comparisons using the `Plotter` class, and synchronized comparisons using the `SynchronizedElevationPlotter` class
+- Distances between geographic coordinates are calculated using the Haversine formula, assuming the Earth's radius is 6371.0 km
