@@ -1,46 +1,47 @@
 # 📍 Tracking App – Backend
 
-## 🔧 Setting Up the Python Environment Locally
+This backend provides tools for analyzing GPX tracks, smoothing elevation data, and comparing different elevation sources.
 
-1. **Clone the repository** to your local machine.
+---
 
-   ```sh
-   git clone https://github.com/CAIProj/backend.git
-   ```
-2. **Navigate to the cloned directory**.
+## 🚀 Getting Started
 
-   ```sh
-   cd backend
-   ```
-3. **Install dependencies**.
+### 1. Clone the Repository
 
-   Using [Poetry](https://python-poetry.org/):
+```sh
+git clone https://github.com/CAIProj/backend.git
+cd backend
+```
 
-   ```sh
-   pip install poetry
-   poetry install --no-root
-   ```
+### 2. Install Dependencies
 
-   or using requirements.txt with pip:
+#### Using [Poetry](https://python-poetry.org/)
+```sh
+pip install poetry
+poetry install --no-root
+```
 
-   ```sh
-   pip install -r requirements.txt
-   ```
+#### Or using `requirements.txt` with pip
+```sh
+pip install -r requirements.txt
+```
 
-## Curve-Smoothing Algorithms
+---
 
-Utilises mathematical algorithms to smooth noisy elevation data.
+## 📈 Curve Smoothing Algorithms
 
-### Included Algorithms
+Mathematical methods are used to smooth noisy elevation curves for improved comparison and visualization.
 
-- Spline Fit (via `scipy`)
-- Loess-v1
-- Loess-v2
+### Supported Algorithms
 
-### Running the Demos Locally
+- **Spline Fit** (via `scipy`)
+- **Loess-v1**
+- **Loess-v2**
 
-1. **Set up the Python environment** as described above.
-2. **From backend repo run one of the test modules like this**:
+### How to Run Demos
+
+1. Ensure your environment is set up as described above.
+2. From the project root, run any of the test modules:
    ```sh
    python -m test.curve_smoothing.test_loess_v1
    python -m test.curve_smoothing.test_loess_v2
@@ -48,16 +49,30 @@ Utilises mathematical algorithms to smooth noisy elevation data.
    python -m test.curve_smoothing.loessv1_vs_loessv2
    python -m test.curve_smoothing.loess_vs_spline
    ```
-3. **(Optional)** Open the notebook for an algorithm walkthrough:
+3. (Optional) Open the Jupyter notebook to explore the algorithms:
    ```sh
    notebooks\curve_smoothing_algo.ipynb
    ```
 
+---
 
-## GPX Track Processing and Elevation Analysis
+## 🌍 GPX Track Processing and Elevation Analysis
 
-- Load latitude, longitude, and altitude from a GPX file using `Track.from_gpx_file()`
-- Retrieve a new track with altitude data from online APIs using `track.with_api_elevations()`
-- Generate a new track with smoothed elevation using `track.with_smoothed_elevations()`
-- Perform simple comparisons using the `Plotter` class, and synchronized comparisons using the `SynchronizedElevationPlotter` class
-- Distances between geographic coordinates are calculated using the Haversine formula, assuming the Earth's radius is 6371.0 km
+Provides utilities for reading GPX files, retrieving elevation data, and comparing sources.
+
+Distance between geographic coordinates is calculated using the Haversine formula, assuming the Earth's radius is 6371.0 km.
+
+### Features
+
+- Load GPX data using `Track.from_gpx_file()`
+- Retrieve elevation data from online APIs via `track.with_api_elevations()`
+- Smooth elevations using `track.with_smoothed_elevations()`
+- Compare elevation profiles using:
+  - `Plotter` for basic plotting
+  - `SynchronizedElevationPlotter` for synchronized comparisons
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
