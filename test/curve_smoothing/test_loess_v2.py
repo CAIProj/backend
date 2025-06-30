@@ -1,4 +1,4 @@
-from src.loess_v2 import loess_v2
+from src.curve_smoothing.loess_v2 import loess_v2
 import numpy as np
 import matplotlib.pyplot as plt
 

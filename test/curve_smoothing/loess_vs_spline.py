@@ -1,6 +1,6 @@
-from src.loess_v2 import loess_v2
-from src.loess_v1 import loess
-from src.spline_fit import spline_fit
+from src.curve_smoothing.loess_v2 import loess_v2
+from src.curve_smoothing.loess_v1 import loess
+from src.curve_smoothing.spline_fit import spline_fit
 import numpy as np
 import matplotlib.pyplot as plt
 

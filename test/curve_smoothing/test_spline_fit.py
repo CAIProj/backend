@@ -1,4 +1,4 @@
-from src.spline_fit import spline_fit
+from src.curve_smoothing.spline_fit import spline_fit
 import numpy as np
 import matplotlib.pyplot as plt
 
