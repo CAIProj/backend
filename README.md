@@ -1,5 +1,27 @@
 # 📍 Tracking App – Backend
 
+## 🔧 Setting Up the Python Environment Locally
+
+1. **Clone the repository** to your local machine.
+   ```sh
+   git clone https://github.com/CAIProj/backend.git
+   ```
+2. **Navigate to the cloned directory**.
+   ```sh
+   cd backend
+   ```
+3. **Install dependencies**.
+
+   Using [Poetry](https://python-poetry.org/):
+   ```sh
+   pip install poetry
+   poetry install --no-root
+   ```
+   or using requirements.txt with pip:
+   ```sh
+   pip install -r requirements.txt
+   ```
+
 
 ## Curve-smoothing Algorithms
 
@@ -11,9 +33,8 @@
     -   Savitzky-Golay Filter
 
 -   To test locally;
-    -   Clone the repository
-    -   install `numpy` and `scipy` packages
-    -   from `curve_smoothing` folder open the terminal
+    -   Set up the python environment as described above
+    -   Open the terminal in `curve_smoothing` folder
     -   run `python -m test.loess_vs_spline` or `python -m test.test_loess_v2` or other files
     -   Read/run the `curve_smoothing_algo.ipynb` to learn more about the algorithms
 
