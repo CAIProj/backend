@@ -27,7 +27,7 @@ classDiagram
     SynchronizedElevationPlotter --> Point : uses
 ```
 
-## Type Aliases
+#### Type Aliases
 
 - `ToleranceVector`: Boolean NumPy array (`np.ndarray[bool]`)
 - `SyncResult`: Tuple of (ElevationProfile, ElevationProfile, ToleranceVector)

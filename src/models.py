@@ -137,12 +137,12 @@ class ElevationProfile:
         """
         return [p.longitude for p in self.points]
 
-    def get_elevations(self) -> list[float]:
+    def get_elevations(self) -> list[Optional[float]]:
         """
         Extract all elevations from the profile points.
 
         Returns:
-            list[float]: Elevations of each Point in order (may include None).
+            list[Optional[float]]: Elevations of each Point.
         """
         return [p.elevation for p in self.points]
 
@@ -443,7 +443,7 @@ class Track:
         Returns the list of elevations for all Points in the track.
 
         Returns:
-            list[Optional[float]]: Elevations of the points in the track.
+            list[Optional[float]]: Elevations of each point of the track.
         """
         return [p.elevation for p in self.points]
     

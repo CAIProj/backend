@@ -20,10 +20,10 @@ classDiagram
         +_calculate_cumulative_distances(): list~float~
         +get_latitudes(): list~float~
         +get_longitudes(): list~float~
-        +get_elevations(): list~float~
+        +get_elevations(): list~Optional~float~~
         +get_distances(): list~float~
         +set_elevations(elevations: list~float~): void
-        +get_elevation_stats(): tuple~float, float, float, float~
+        +get_elevation_stats(): ElevationStats
         +copy(): ElevationProfile
         +set_distances(distances: list~float~): void
         +with_api_elevations(api_cls: type~BaseElevationAPI~): ElevationProfile
@@ -56,3 +56,8 @@ classDiagram
     Track --> ElevationProfile : uses
     Track --> BaseElevationAPI : uses
 ```
+
+#### Type Aliases
+
+- `ElevationStats`: `tuple[float, float, float, float]` — (ascend, descend, greatest_ascend, greatest_descend)
+
