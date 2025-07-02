@@ -35,7 +35,7 @@ class Plotter:
 
     def add_profiles(
             self, 
-            *profiles_with_names: Union[
+            *profiles: Union[
                 ElevationProfile, 
                 Tuple[ElevationProfile, Optional[str]]
             ]
@@ -44,7 +44,7 @@ class Plotter:
         Add one or more ElevationProfile instances with optional names.
 
         Args:
-            *profiles_with_names (Union[ElevationProfile, Tuple[ElevationProfile, Optional[str]]]): One or more ElevationProfile instances or 
+            *profiles (Union[ElevationProfile, Tuple[ElevationProfile, Optional[str]]]): One or more ElevationProfile instances or 
                 (ElevationProfile, name) tuples.
 
         Raises:
@@ -55,7 +55,7 @@ class Plotter:
             >>> plotter.add_profiles((profile, "Hike"))
             >>> plotter.add_profiles((profile1, "Morning"), (profile2, "Evening"))
         """
-        for item in profiles_with_names:
+        for item in profiles:
             if isinstance(item, ElevationProfile):
                 # No name provided, auto-generate
                 name = self._generate_unique_name()
