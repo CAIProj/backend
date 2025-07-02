@@ -72,6 +72,20 @@ Distance between geographic coordinates is calculated using the Haversine formul
   - `SynchronizedElevationPlotter` for synchronized comparisons
 
 ---
+## 📚 Documentation
+
+- Class diagrams of core plotting classes are available in the [`docs/`](docs/) folder:
+
+   1. [`class_diagram_elevation_api.md`](docs/class_diagram_elevation_api.md)
+   2. [`class_diagram_models.md`](docs/class_diagram_models.md)
+   3. [`class_diagram_plotter.md`](docs/class_diagram_plotter.md)
+
+- Backend feature usage examples and notebooks:
+
+   1. [`backend_feature_examples.ipynb`](docs/backend_feature_examples.ipynb)
+   2.  [`curve_smoothing_algo.ipynb`](docs/curve_smoothing_algo.ipynb)
+
+---
 
 ## 📄 License
 
