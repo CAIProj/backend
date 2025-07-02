@@ -16,7 +16,7 @@ classDiagram
     class ElevationProfile {
         -points: list~Point~
         -distances: list~float~
-        +__init__(points: list~Point~)
+        +\_\_init\_\_(points: list~Point~)
         +_calculate_cumulative_distances(): list~float~
         +get_latitudes(): list~float~
         +get_longitudes(): list~float~
@@ -34,7 +34,7 @@ classDiagram
         -_points: list~Point~
         -_elevation_profile: Optional~ElevationProfile~
         -_total_distance: Optional~float~
-        +__init__(points: list~Point~)
+        +\_\_init\_\_(points: list~Point~)
         +points: list~Point~
         +elevation_profile: ElevationProfile
         +total_distance: float

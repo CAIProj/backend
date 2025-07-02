@@ -5,7 +5,7 @@ classDiagram
 
     class Plotter {
         -profiles: dict~str, ElevationProfile~
-        +__init__(profiles: Optional~List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]~)
+        +\_\_init\_\_(profiles: Optional~List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]~)
         +add_profiles(*profiles): void
         +set_profiles(profiles_dict: dict~str, ElevationProfile~): void
         +plot_distance_vs_elevation(title: str, xlabel: str, ylabel: str, output: Optional~str~): void
