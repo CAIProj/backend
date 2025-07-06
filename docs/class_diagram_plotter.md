@@ -5,7 +5,7 @@ classDiagram
 
     class Plotter {
         -profiles: dict~str, ElevationProfile~
-        +\_\_init\_\_(profiles: Optional~List[Union[ElevationProfile, Tuple[ElevationProfile, str]]]~)
+        +\_\_init\_\_(profiles: Optional~List~ProfileInput~~)
         +add_profiles(*profiles): void
         +set_profiles(profiles_dict: dict~str, ElevationProfile~): void
         +plot_distance_vs_elevation(title: str, xlabel: str, ylabel: str, output: Optional~str~): void
@@ -29,5 +29,6 @@ classDiagram
 
 #### Type Aliases
 
+- `ProfileInput`: Union[ElevationProfile, Tuple[ElevationProfile, str]]
 - `ToleranceVector`: Boolean NumPy array (`np.ndarray[bool]`)
 - `SyncResult`: Tuple of (ElevationProfile, ElevationProfile, ToleranceVector)
